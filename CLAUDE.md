@@ -42,7 +42,9 @@ notebook a reader can run themselves.
 
 | Path | What it is |
 |---|---|
-| `notebooks/agentic_network.ipynb` | The runnable demo. This is what the Colab link opens. |
+| `agentic_network/` | The package. `config.py` loads XML, `graph.py` builds the state machine, `channels.py` decides where output goes, `cli.py` and `gui.py` are the two entry points. |
+| `notebooks/agentic_network.ipynb` | The runnable demo. This is what the Colab link opens. Thin: it imports the package. |
+| `tests/test_network.py` | Smoke tests with a stub LLM. No key, no network, no cost. |
 | `config/config_travel.xml` | Agent network for the fictional OTA, "Ofishal". |
 | `config/config_agency.xml` | Same graph, consulting firm. Proof the pattern generalises. |
 | `.env.example` | Template. Copy to `.env`, which is never committed. |
@@ -76,12 +78,21 @@ they arrived. Read from it freely; never commit from it.
 
 ## Build and validate
 
+All commands run from the repo root.
+
 ```
 check the key:   python3 scripts/check_key.py
+run the tests:   python3 -m tests.test_network          # no API key needed
 run headless:    python3 -m agentic_network.cli "My bookings for November are down 20%."
+  other config:  python3 -m agentic_network.cli -c config/config_agency.xml "..."
+  no prompting:  python3 -m agentic_network.cli --yes "..."   (or --no)
 run the GUI:     python3 -m agentic_network.gui
 rebuild pages:   bash tools/build.sh
+re-run notebook: python3 -m nbconvert --to notebook --execute --inplace notebooks/agentic_network.ipynb
 ```
+
+The package is a flat layout, importable from the repo root with no install step, so a reader
+can clone and run. The notebook's setup cell chdirs to the root when opened from `notebooks/`.
 
 Note: on this machine `pip` does not exist. Use `python3 -m pip`, which also guarantees the
 install lands in the same interpreter that runs the code.
@@ -89,6 +100,7 @@ install lands in the same interpreter that runs the code.
 **Validation checklist:**
 
 ```
+python3 -m tests.test_network                  passes, all checks
 no API key in any tracked file, source cells AND saved outputs
 0 broken local links
 no prose em-dashes
@@ -100,24 +112,33 @@ both config files load and produce a working graph
 
 ## Traps
 
-- **`if __name__ == "__main__"` is TRUE inside a notebook.** The V5 notebook ends with
-  `launch_app()` inside such a block, so running that cell opens the tkinter window and blocks.
-  In Colab it fails outright, there is no display. Any published notebook must default to the
-  headless path.
+- **`if __name__ == "__main__"` is TRUE inside a notebook.** The original V5 notebook ended with
+  `launch_app()` inside such a block, so running that cell opened the tkinter window and blocked.
+  In Colab it fails outright, there is no display. FIXED: the notebook is headless throughout and
+  the GUI is a separate entry point.
+- **The human-in-the-loop gate returned different text than the human approved.** The original
+  routed `human_approval` back to `broker`, which re-ran synthesis, so the delivered answer was a
+  second generation, sometimes with a different risk verdict than the one shown for approval.
+  FIXED: the gate is terminal and returns the approved text verbatim. `tests/test_network.py`
+  asserts the proposal appears in the final answer and that synthesis runs once.
+- **nbformat wants newlines kept.** Building cells with `text.split("\n")` drops them, so a
+  multi-line cell is written as one mashed line and fails to compile. Use
+  `splitlines(keepends=True)`.
 - **tkinter does not run in Colab.** The GUI is a desktop-only entry point. The Colab story is
   `run_scenario()`. Do not link a GUI notebook as "open in Colab".
-- **Scenario keywords are matched as substrings**, so `"ai"` in `config_agency.xml` matches
-  *retail*, *explain*, *email*, *available*, *maintain* and *campaign*. Routing misfires silently.
-  Match on word boundaries.
+- **Scenario keywords were matched as substrings**, so `"ai"` in `config_agency.xml` matched
+  *retail*, *explain*, *email*, *available*, *maintain* and *campaign*, and routing misfired with
+  no sign it had. FIXED: word boundaries with an optional plural, so `crib` still matches "cribs".
 - **Scenario matching is first-match-wins over document order**, so when two scenarios could
   match, the result depends on XML ordering rather than on relevance.
-- **A bare `except:` around the router's `json.loads`** turns a malformed LLM reply into a
-  silent fallback to the first agent, which looks like a routing decision. Catch
-  `json.JSONDecodeError` and log it.
-- **Duplicate JSON keys in the mock data**: `config_travel.xml` has `"suggested"` twice in
-  scenario 1 and `"action"` twice in scenario 4. Harmless today because the strings are passed
-  to the LLM rather than parsed, but wrong, and a trap for anyone who starts parsing them.
+- **A bare `except:` around the router's `json.loads`** turned a malformed LLM reply into a
+  silent fallback to the first agent, indistinguishable from a real decision. FIXED: it catches
+  `json.JSONDecodeError`, logs the raw reply, and also reports agent names that do not exist.
+- **Duplicate JSON keys in the mock data**: `config_travel.xml` had `"suggested"` twice in
+  scenario 1 and `"action"` twice in scenario 4, so the first value of each was invisible.
+  FIXED, and a test now parses all 50 fixtures and fails on any key collision.
 - **`langchain.debug = False` is deprecated** in LangChain 1.x. This project is on 1.2.10.
+  FIXED: removed, nothing set it to anything but the default.
 - **Python 3.14 warns about Pydantic v1** on import. Cosmetic, comes from inside LangChain.
 
 ---

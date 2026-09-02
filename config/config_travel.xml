@@ -72,10 +72,10 @@ Task:
         <agent id="content_specialist" name="Content Specialist">
             <description>photos, description</description>
             <mock_data default="Content score is 100%.">
-                <response scenario_id="1">{"suggested": "Seasonality Mismatch change summer image to fireplace", "current_img": "Pool", "suggested": "Fireplace"}</response>
+                <response scenario_id="1">{"issue": "Seasonality mismatch", "current_img": "Pool", "suggested_img": "Fireplace"}</response>
                 <response scenario_id="2">{"action": "Update Description: Construction Warning.", "text": "Entrance via side door due to roadwork"}</response>
                 <response scenario_id="3">{"action": "SEO Update: Concert Keywords", "keyword": "Near Stadium", "status": "Applied"}</response>
-                <response scenario_id="4">{"action": "Add Amenity: Cribs", "action": "Tag as Amenity to appear in filters"}</response>
+                <response scenario_id="4">{"action": "Add amenity: Cribs", "detail": "Tag as an amenity so the listing appears in family filters"}</response>
                 <response scenario_id="5">{"value_prop": "Free Breakfast", "action": "Highlight in Hero Image"}</response>
             </mock_data>
         </agent>
