@@ -14,7 +14,6 @@ from agentic_network import load_config                    # noqa: E402
 from tools import diagram, excerpt, hl, page               # noqa: E402
 
 TRAVEL = load_config(ROOT / "config/config_travel.xml")
-COMMIT = f"{page.REPO}/commit/30e9b14"
 
 
 def build():
@@ -96,36 +95,39 @@ def build():
   <section>
     <h2>Routing, and admitting when it fails</h2>
     <p>The broker asks the model which specialists to consult and expects a JSON list of agent
-    ids back. Models do not always oblige. The original wrapped that parse in a bare
-    <code>except</code>, which meant a malformed reply silently became a decision to consult the
-    first agent, indistinguishable from a real routing choice.</p>
+    ids back. Models do not always oblige, so the parser treats three failures as distinct:
+    output that is not JSON, JSON that is not a list, and names that are not in the roster.</p>
 
     {py(excerpt.named("agentic_network/graph.py", "_parse_plan"))}
 
-    <p>It still falls back, because a demo that dies on a bad parse is worse than one that
-    degrades. The difference is that it now says so, and it separately reports agent names the
-    model invented, which is the failure that looks most like working software.</p>
+    <p>All three fall back to consulting one agent rather than raising, because a demo that
+    stops on a bad parse is less useful than one that degrades. Each is logged on the way past.
+    The third case matters most: a model that invents a plausible agent name produces a run that
+    looks entirely successful, and without the log there is nothing to distinguish it from a
+    real routing decision.</p>
   </section>
 
   <section>
     <h2>Scenario selection</h2>
     <p>Which fixture an agent returns depends on the scenario, matched by keyword against the
-    question. This is the least clever part of the system and it caused the most trouble.</p>
+    question. It is the least clever part of the system and the place where
+    imprecision is hardest to notice.</p>
 
     {py(excerpt.named("agentic_network/config.py", "NetworkConfig", inner="scenario_for"))}
 
-    <p>The original matched substrings. Because the consulting config lists <code>ai</code> as a
-    keyword, any question containing <em>retail</em>, <em>explain</em>, <em>email</em>,
-    <em>available</em>, <em>maintain</em> or <em>campaign</em> was routed to the technology
-    disruption scenario. Nothing failed. The agents returned confident, well-formed answers
-    about the wrong situation.</p>
+    <p>Matching is on word boundaries with an optional plural, so <code>crib</code> catches
+    "cribs" while <code>ai</code> catches "AI" and "AI-driven" but not <em>retail</em>,
+    <em>explain</em> or <em>email</em>. The precision is worth the regular expression, because
+    a mis-selected scenario does not raise anything: the agents return confident, well-formed
+    answers about the wrong situation. First match in document order wins, so scenarios are
+    ordered from most specific to least.</p>
   </section>
 
   <section>
     <h2>The graph does not know where its output goes</h2>
-    <p>The first version wired the desktop client to the graph through four module-level
-    globals, so the nodes had to know whether a GUI was attached. That made the graph
-    untestable and the CLI and GUI impossible to separate. Now the nodes talk to a channel.</p>
+    <p>The nodes never print and never call <code>input()</code>. They talk to a channel,
+    handed in when the network is built, and that is the only route anything takes out of the
+    graph or back into it.</p>
 
     {py(excerpt.named("agentic_network/channels.py", "Channel"))}
 
@@ -140,34 +142,29 @@ def build():
   </section>
 
   <section id="gate">
-    <h2>The human gate, and how it was broken</h2>
+    <h2>The human gate</h2>
     <p>The synthesis prompt asks the model to score its own recommendation, and the config
     supplies the rule. In the travel network, changing prices or publishing content needs a
     person. In the consulting network it is layoffs, restructuring, or budget moves over $1M.
     The broker sets <code>requires_approval</code> when the answer contains
     <code>RISK: YES</code>, and the router sends it to the gate.</p>
 
-    <p>In the original, the gate had an edge back to the broker. That looks harmless. It is
-    not: the broker's first action is to check whether agent outputs exist, and they do, so it
-    <strong>re-ran synthesis</strong>. The user therefore received a second, independently
-    generated answer, not the one they had just approved.</p>
-
-    <p>The original notebook is still in the history, with its output. Across the six approval
-    runs recorded in it, the delivered text differed from the approved text in
-    <strong>three</strong>, and in <strong>one</strong> the risk verdict itself flipped: the
-    human approved a proposal marked <code>RISK: YES</code> and received an answer marked
-    <code>RISK: NO</code>. That run is in
-    <a href="{COMMIT}">commit 30e9b14</a>, cell 34.</p>
-
-    <p>The fix is to make the gate terminal and hand back exactly the text that was shown.</p>
+    <p>The gate is <strong>terminal</strong>. It has one outgoing edge, to <code>END</code>,
+    and it hands back exactly the text it showed the human.</p>
 
     {py(excerpt.named("agentic_network/graph.py", "build_network", inner="human_approval"))}
 
-    <p>An approval gate that regenerates its answer is not an approval gate. If you build one,
-    assert early that the approved text survives to the output, because nothing about the
-    behavior looks wrong from the outside: the system stops, a person says yes, and a
-    plausible answer appears.</p>
-  </section>
+    <p>That the gate does not route back into the broker is the whole design, and it is worth
+    being explicit about why. The broker's first action is to check whether agent outputs
+    exist. After a fan-out they do, so any path that re-enters the broker runs synthesis a
+    second time and produces a fresh answer. The person would then have authorised one piece of
+    text and received another, generated after they clicked yes, potentially carrying a
+    different risk verdict.</p>
+
+    <p>Nothing about that looks wrong from outside: the system stops, a person approves, and a
+    plausible answer appears. An approval gate that regenerates its answer is not an approval
+    gate, so the test suite asserts that the proposal text survives verbatim into the final
+    output, and that synthesis runs exactly once.</p>
 
   <section>
     <h2>Where the fixtures sit</h2>

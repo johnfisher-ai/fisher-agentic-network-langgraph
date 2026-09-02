@@ -51,10 +51,10 @@ class NetworkConfig:
         """Pick a scenario by keyword.
 
         Keywords match on word boundaries with an optional plural, so "crib"
-        matches "cribs" but "ai" no longer matches "retail", "explain" or "email".
-        An earlier substring version of this routed those to the wrong scenario
-        silently. First match in document order wins, so order the scenarios from
-        most to least specific.
+        matches "cribs" while "ai" matches "AI" and "AI-driven" but not "retail",
+        "explain" or "email". Substring matching would catch all three and route
+        them to the wrong scenario without raising anything. First match in
+        document order wins, so order the scenarios from most to least specific.
         """
         text = prompt.lower()
         for sc in self.scenarios:

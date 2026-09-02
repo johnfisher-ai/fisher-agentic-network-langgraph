@@ -130,9 +130,9 @@ def build_network(
 
         if channel.ask_approval(proposal):
             channel.log("human approved")
-            # Deliver exactly the text that was approved. An earlier version routed
-            # back through the broker, which re-ran synthesis and returned different
-            # wording, and sometimes a different risk verdict, than the human saw.
+            # Deliver exactly the text that was approved. Routing back through the
+            # broker would re-run synthesis and hand the user a different answer
+            # from the one they authorised.
             final = proposal + "\n\n[STATUS: APPROVED BY HUMAN, EXECUTED]"
             channel.chat(final)
             channel.status("Ready")
@@ -172,8 +172,9 @@ def build_network(
 def _parse_plan(raw: str, config: NetworkConfig, channel: Channel) -> list[str]:
     """Read the router's JSON list of agent ids, and say so when it is malformed.
 
-    The original swallowed every exception here and silently fell back to the
-    first agent, so a broken reply was indistinguishable from a real decision.
+    Falls back to a single agent rather than raising, but logs every reason it
+    did: unparseable output, a non-list, or names that are not in the roster.
+    An unlogged fallback is indistinguishable from a real routing decision.
     """
     cleaned = raw.replace("```json", "").replace("```", "").strip()
     fallback = [next(iter(config.agents))]

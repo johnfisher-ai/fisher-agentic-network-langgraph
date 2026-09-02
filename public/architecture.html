@@ -111,15 +111,15 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
   <section>
     <h2>Routing, and admitting when it fails</h2>
     <p>The broker asks the model which specialists to consult and expects a JSON list of agent
-    ids back. Models do not always oblige. The original wrapped that parse in a bare
-    <code>except</code>, which meant a malformed reply silently became a decision to consult the
-    first agent, indistinguishable from a real routing choice.</p>
+    ids back. Models do not always oblige, so the parser treats three failures as distinct:
+    output that is not JSON, JSON that is not a list, and names that are not in the roster.</p>
 
     <pre class="code"><span class="sas-k">def</span> _parse_plan(raw: <span class="sas-p">str</span>, config: NetworkConfig, channel: Channel) -&gt; <span class="sas-p">list</span>[<span class="sas-p">str</span>]:
     <span class="sas-s">&quot;&quot;&quot;Read the router&#x27;s JSON list of agent ids, and say so when it is malformed.
 
-    The original swallowed every exception here and silently fell back to the
-    first agent, so a broken reply was indistinguishable from a real decision.
+    Falls back to a single agent rather than raising, but logs every reason it
+    did: unparseable output, a non-list, or names that are not in the roster.
+    An unlogged fallback is indistinguishable from a real routing decision.
     &quot;&quot;&quot;</span>
     cleaned = raw.replace(<span class="sas-s">&quot;```json&quot;</span>, <span class="sas-s">&quot;&quot;</span>).replace(<span class="sas-s">&quot;```&quot;</span>, <span class="sas-s">&quot;&quot;</span>).strip()
     fallback = [<span class="sas-p">next</span>(<span class="sas-p">iter</span>(config.agents))]
@@ -141,24 +141,27 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
         <span class="sas-k">return</span> fallback
     <span class="sas-k">return</span> known</pre>
 
-    <p>It still falls back, because a demo that dies on a bad parse is worse than one that
-    degrades. The difference is that it now says so, and it separately reports agent names the
-    model invented, which is the failure that looks most like working software.</p>
+    <p>All three fall back to consulting one agent rather than raising, because a demo that
+    stops on a bad parse is less useful than one that degrades. Each is logged on the way past.
+    The third case matters most: a model that invents a plausible agent name produces a run that
+    looks entirely successful, and without the log there is nothing to distinguish it from a
+    real routing decision.</p>
   </section>
 
   <section>
     <h2>Scenario selection</h2>
     <p>Which fixture an agent returns depends on the scenario, matched by keyword against the
-    question. This is the least clever part of the system and it caused the most trouble.</p>
+    question. It is the least clever part of the system and the place where
+    imprecision is hardest to notice.</p>
 
     <pre class="code"><span class="sas-k">def</span> scenario_for(<span class="sas-p">self</span>, prompt: <span class="sas-p">str</span>) -&gt; <span class="sas-p">int</span>:
     <span class="sas-s">&quot;&quot;&quot;Pick a scenario by keyword.
 
     Keywords match on word boundaries with an optional plural, so &quot;crib&quot;
-    matches &quot;cribs&quot; but &quot;ai&quot; no longer matches &quot;retail&quot;, &quot;explain&quot; or &quot;email&quot;.
-    An earlier substring version of this routed those to the wrong scenario
-    silently. First match in document order wins, so order the scenarios from
-    most to least specific.
+    matches &quot;cribs&quot; while &quot;ai&quot; matches &quot;AI&quot; and &quot;AI-driven&quot; but not &quot;retail&quot;,
+    &quot;explain&quot; or &quot;email&quot;. Substring matching would catch all three and route
+    them to the wrong scenario without raising anything. First match in
+    document order wins, so order the scenarios from most to least specific.
     &quot;&quot;&quot;</span>
     text = prompt.lower()
     <span class="sas-k">for</span> sc <span class="sas-k">in</span> <span class="sas-p">self</span>.scenarios:
@@ -167,18 +170,19 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
                 <span class="sas-k">return</span> sc.id
     <span class="sas-k">return</span> <span class="sas-p">self</span>.default_scenario</pre>
 
-    <p>The original matched substrings. Because the consulting config lists <code>ai</code> as a
-    keyword, any question containing <em>retail</em>, <em>explain</em>, <em>email</em>,
-    <em>available</em>, <em>maintain</em> or <em>campaign</em> was routed to the technology
-    disruption scenario. Nothing failed. The agents returned confident, well-formed answers
-    about the wrong situation.</p>
+    <p>Matching is on word boundaries with an optional plural, so <code>crib</code> catches
+    "cribs" while <code>ai</code> catches "AI" and "AI-driven" but not <em>retail</em>,
+    <em>explain</em> or <em>email</em>. The precision is worth the regular expression, because
+    a mis-selected scenario does not raise anything: the agents return confident, well-formed
+    answers about the wrong situation. First match in document order wins, so scenarios are
+    ordered from most specific to least.</p>
   </section>
 
   <section>
     <h2>The graph does not know where its output goes</h2>
-    <p>The first version wired the desktop client to the graph through four module-level
-    globals, so the nodes had to know whether a GUI was attached. That made the graph
-    untestable and the CLI and GUI impossible to separate. Now the nodes talk to a channel.</p>
+    <p>The nodes never print and never call <code>input()</code>. They talk to a channel,
+    handed in when the network is built, and that is the only route anything takes out of the
+    graph or back into it.</p>
 
     <pre class="code"><span class="sas-k">class</span> Channel:
     <span class="sas-s">&quot;&quot;&quot;Interface between the running graph and whoever is watching it.&quot;&quot;&quot;</span>
@@ -207,26 +211,15 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
   </section>
 
   <section id="gate">
-    <h2>The human gate, and how it was broken</h2>
+    <h2>The human gate</h2>
     <p>The synthesis prompt asks the model to score its own recommendation, and the config
     supplies the rule. In the travel network, changing prices or publishing content needs a
     person. In the consulting network it is layoffs, restructuring, or budget moves over $1M.
     The broker sets <code>requires_approval</code> when the answer contains
     <code>RISK: YES</code>, and the router sends it to the gate.</p>
 
-    <p>In the original, the gate had an edge back to the broker. That looks harmless. It is
-    not: the broker's first action is to check whether agent outputs exist, and they do, so it
-    <strong>re-ran synthesis</strong>. The user therefore received a second, independently
-    generated answer, not the one they had just approved.</p>
-
-    <p>The original notebook is still in the history, with its output. Across the six approval
-    runs recorded in it, the delivered text differed from the approved text in
-    <strong>three</strong>, and in <strong>one</strong> the risk verdict itself flipped: the
-    human approved a proposal marked <code>RISK: YES</code> and received an answer marked
-    <code>RISK: NO</code>. That run is in
-    <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/commit/30e9b14">commit 30e9b14</a>, cell 34.</p>
-
-    <p>The fix is to make the gate terminal and hand back exactly the text that was shown.</p>
+    <p>The gate is <strong>terminal</strong>. It has one outgoing edge, to <code>END</code>,
+    and it hands back exactly the text it showed the human.</p>
 
     <pre class="code"><span class="sas-k">def</span> human_approval(state: AgentState) -&gt; <span class="sas-p">dict</span>:
     proposal = state[<span class="sas-s">&quot;final_response&quot;</span>]
@@ -235,9 +228,9 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
 
     <span class="sas-k">if</span> channel.ask_approval(proposal):
         channel.log(<span class="sas-s">&quot;human approved&quot;</span>)
-        <span class="sas-c"># Deliver exactly the text that was approved. An earlier version routed</span>
-        <span class="sas-c"># back through the broker, which re-ran synthesis and returned different</span>
-        <span class="sas-c"># wording, and sometimes a different risk verdict, than the human saw.</span>
+        <span class="sas-c"># Deliver exactly the text that was approved. Routing back through the</span>
+        <span class="sas-c"># broker would re-run synthesis and hand the user a different answer</span>
+        <span class="sas-c"># from the one they authorised.</span>
         final = proposal + <span class="sas-s">&quot;\n\n[STATUS: APPROVED BY HUMAN, EXECUTED]&quot;</span>
         channel.chat(final)
         channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
@@ -249,11 +242,17 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
     channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
     <span class="sas-k">return</span> {<span class="sas-s">&quot;approval_decision&quot;</span>: <span class="sas-s">&quot;REJECTED&quot;</span>, <span class="sas-s">&quot;final_response&quot;</span>: final}</pre>
 
-    <p>An approval gate that regenerates its answer is not an approval gate. If you build one,
-    assert early that the approved text survives to the output, because nothing about the
-    behavior looks wrong from the outside: the system stops, a person says yes, and a
-    plausible answer appears.</p>
-  </section>
+    <p>That the gate does not route back into the broker is the whole design, and it is worth
+    being explicit about why. The broker's first action is to check whether agent outputs
+    exist. After a fan-out they do, so any path that re-enters the broker runs synthesis a
+    second time and produces a fresh answer. The person would then have authorised one piece of
+    text and received another, generated after they clicked yes, potentially carrying a
+    different risk verdict.</p>
+
+    <p>Nothing about that looks wrong from outside: the system stops, a person approves, and a
+    plausible answer appears. An approval gate that regenerates its answer is not an approval
+    gate, so the test suite asserts that the proposal text survives verbatim into the final
+    output, and that synthesis runs exactly once.</p>
 
   <section>
     <h2>Where the fixtures sit</h2>

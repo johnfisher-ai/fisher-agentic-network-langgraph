@@ -39,7 +39,7 @@ ROLES = [
 def build():
     c = counts()
     arch = page.PUBLIC / "architecture.html"
-    arch_link = (' The <a href="architecture.html#gate">architecture page</a> walks through why.'
+    arch_link = (' The <a href="architecture.html#gate">architecture page</a> has the detail.'
                  if arch.exists() else "")
     d = diagram.network_flow(
         [("Market Scout", "events, weather"),
@@ -168,11 +168,8 @@ def build():
     terminal and hands back the proposal verbatim, with a test asserting that it appears
     unchanged in the final answer.</p>
 
-    <p>That is not hypothetical. It is how the first version of this project worked, and the
-    original notebook is still in the history if you want to see it: in
-    <a href="{page.REPO}/commit/30e9b14">the commit that added it</a>, one recorded run shows a
-    human approving a proposal marked <code>RISK: YES</code> and receiving an answer marked
-    <code>RISK: NO</code>.{arch_link}</p>
+      <p>Nothing about a regenerated answer looks wrong from outside: the system stops, a
+      person approves, and a plausible answer appears.{arch_link}</p>
   </section>
 
   <section>
