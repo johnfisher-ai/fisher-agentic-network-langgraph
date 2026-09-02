@@ -54,6 +54,7 @@ notebook a reader can run themselves.
 | `public/` | The site. **The only folder Pages serves.** |
 | `tools/` | Build machinery. GENERATED pages come from here; never hand-edit them. |
 | `.github/workflows/pages.yml` | Publishes `public/` on every push to `main`. |
+| `.github/workflows/check.yml` | Runs the link and house-rule checks on every push and pull request. Separate from the deploy, so a failure cannot wedge Pages. |
 
 The workspace **above** this repo (`../source/`, `../scratch/`) holds raw material and throwaway
 work, outside git. `../source/original/` keeps pristine copies of the notebook and configs as
@@ -101,6 +102,7 @@ install lands in the same interpreter that runs the code.
 
 ```
 python3 -m tests.test_network                  passes, all checks
+bash tools/build.sh                            passes, including both gates
 no API key in any tracked file, source cells AND saved outputs
 0 broken local links
 no prose em-dashes
@@ -140,6 +142,9 @@ both config files load and produce a working graph
 - **`langchain.debug = False` is deprecated** in LangChain 1.x. This project is on 1.2.10.
   FIXED: removed, nothing set it to anything but the default.
 - **Python 3.14 warns about Pydantic v1** on import. Cosmetic, comes from inside LangChain.
+- **A dead Colab button is invisible.** The page loads and the notebook 404s only when a
+  reader clicks it. `tools/check_links.py` resolves the Colab, `github.com/blob` and Pages
+  URLs against the checkout for exactly that reason, and it runs in CI.
 
 ---
 

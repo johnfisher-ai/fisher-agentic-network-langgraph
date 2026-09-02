@@ -1,0 +1,41 @@
+name: Check
+
+# Fails a push or a pull request that breaks a link or a house rule.
+#
+# Separate from pages.yml on purpose. This job is cheap, needs nothing but
+# read access to the checkout, and runs on pull requests too, so a problem is
+# visible before it is merged rather than after it is live. Keeping it out of
+# the deploy workflow also means a failure here can never wedge a Pages
+# deployment.
+#
+# The checks are the same ones tools/build.sh runs locally, so CI and a
+# developer's machine cannot disagree about what passing means.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Every link resolves
+        run: python3 tools/check_links.py
+
+      - name: House rules hold
+        run: python3 tools/check_content.py
