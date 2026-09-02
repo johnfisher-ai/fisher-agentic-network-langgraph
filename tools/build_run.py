@@ -53,6 +53,13 @@ def build():
     <p class="lede">Everything runs from the repository root, and the package needs no install
     step of its own. The only thing you have to supply is an OpenAI key, and only for the two
     calls the broker makes per question. The test suite runs without one.</p>
+
+    <div class="note">
+      <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
+      So the only credential you need is one OpenAI key. You are not being asked to wire this to
+      a booking system, a rate feed or anything else you would have to think twice about.</p>
+      <p>{page.WHY}</p>
+    </div>
   </section>
 
   <section>
@@ -101,9 +108,8 @@ PASS - the new key works.''', name="output")}
     <h2>What it costs</h2>
     <p>Two calls to <code>gpt-4o</code> per question: one to choose which specialists to
     consult, one to synthesise their findings and score the risk. A fraction of a cent.</p>
-    <p>The specialists themselves cost nothing. Their answers come from the config file, so the number
-    of agents consulted does not change the bill, and nothing about your question or their
-    data reaches any service other than OpenAI.</p>
+    <p>The specialists themselves cost nothing, so the number of agents consulted does not
+    change the bill.</p>
   </section>
 
   <section>
