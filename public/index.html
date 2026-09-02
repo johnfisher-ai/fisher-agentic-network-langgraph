@@ -3,24 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>fisher-agentic-network-langgraph</title>
-<meta name="description" content="One sentence, under 155 characters, describing what this is. This is what Google shows.">
-
+<title>A Config-Driven Agent Network</title>
+<meta name="description" content="A LangGraph multi-agent network where the agent roster, prompts and risk rules live in XML. Swap the config and the same graph becomes a different business.">
 <link rel="canonical" href="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/">
 <meta name="author" content="John Fisher">
 <meta name="theme-color" content="#2f5d94">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="fisher-agentic-network-langgraph">
-<meta property="og:title" content="Title as it should appear on a shared card. Keep under 70 characters or LinkedIn truncates it.">
-<meta property="og:description" content="One or two sentences for the shared card. This is what LinkedIn, Slack and Facebook show under the image.">
+<meta property="og:site_name" content="A Config-Driven Agent Network">
+<meta property="og:title" content="A Config-Driven Agent Network">
+<meta property="og:description" content="Specialist agents coordinated by a broker, with a human approval gate on anything risky. The roster lives in XML, so one graph serves two different businesses.">
 <meta property="og:url" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/">
 <meta property="og:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
-<meta property="og:image:alt" content="Describe the card for someone who cannot see it.">
+<meta property="og:image:alt" content="A broker agent fanning out to five specialist agents, with a human approval gate on the risky path.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Same as og:title.">
-<meta name="twitter:description" content="Same as og:description.">
+<meta name="twitter:title" content="A Config-Driven Agent Network">
+<meta name="twitter:description" content="Specialist agents coordinated by a broker, with a human approval gate on anything risky. The roster lives in XML, so one graph serves two different businesses.">
 <meta name="twitter:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
 <link rel="stylesheet" href="assets/css/site.css">
 </head>
@@ -28,55 +27,120 @@
 
 <header class="top">
   <div class="wrap">
-    <p class="kicker">Kicker: institution or context</p>
-    <h1>The title of the thing</h1>
-    <p class="byline">Who made it, and its current status.</p>
+    <p class="kicker">An exploration of LangChain and LangGraph</p>
+    <h1>A Config-Driven Agent Network</h1>
+    <p class="byline">By John Fisher. A working prototype, with the orchestration live and the agent data mocked.</p>
   </div>
 </header>
 
-<nav class="site">
-  <div class="wrap">
-    <a href="./" aria-current="page">Overview</a>
-    <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a>
-  </div>
-</nav>
+<nav class="site"><div class="wrap"><a href="./" aria-current="page">Overview</a><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a></div></nav>
 
 <main>
 <div class="wrap">
 
   <section>
-    <p class="lede">The one-paragraph version. What was done, and what came of it.</p>
+    <p class="lede">A network of specialist AI agents, coordinated by a broker, with a human
+    approval gate on anything consequential. The point of the project is that the network is
+    <strong>data, not code</strong>: the agent roster, the routing prompts, the demo scenarios
+    and the definition of what counts as risky all live in an XML file. Point the loader at a
+    different file and the same graph becomes a different business.</p>
 
     <div class="figures">
-      <div><span class="n">00</span><span class="l">a key figure</span></div>
-      <div><span class="n">00</span><span class="l">another</span></div>
-      <div><span class="n">00</span><span class="l">another</span></div>
+      <div><span class="n">2</span><span class="l">agent networks defined</span></div>
+      <div><span class="n">10</span><span class="l">agents across both</span></div>
+      <div><span class="n">10</span><span class="l">demo scenarios</span></div>
+      <div><span class="n">0</span><span class="l">code changes to swap domain</span></div>
     </div>
-  </section>
-
-  <section>
-    <h2>A section</h2>
-    <p>Body text. Plain declarative sentences. American English, no prose em-dashes.</p>
 
     <div class="note">
-      <p>A callout, for a caveat or a definition the reader needs before the next section.</p>
+      <p><strong>What is real, and what is not.</strong> The orchestration runs: the LangGraph
+      state machine, the LLM-driven routing, the synthesis step, the risk scoring and the human
+      interrupt all execute against <code>gpt-4o</code>. <strong>Every agent response is a
+      fixture read from the XML.</strong> No vendor API is called, and no MCP server exists.
+      The design notes name candidate integrations, rate-shopping feeds, property management
+      systems, flight capacity data; none of them are built.</p>
+      <p>That is deliberate. Canned agent replies keep the demo deterministic and nearly free to
+      run, so the orchestration is the thing under examination rather than five integrations.
+      This is a study of a pattern, not a product, and nothing here evidences a business
+      outcome.</p>
     </div>
   </section>
 
   <section>
-    <h2>Links</h2>
+    <h2>How a question moves</h2>
+    <p>A partner states a problem in their own words. They do not choose an agent, and they do
+    not need to know the roster exists. The broker reads the intent, decides which specialists
+    are relevant, and delegates. The specialists run in parallel and report back. The broker
+    then does the part that makes the network worth having: it combines findings that no single
+    agent could have reached alone, and it scores the risk of its own recommendation.</p>
+
+    <figure>
+      <div class="figbox"><svg class="fig diagram" viewBox="0 0 780 500" role="img" aria-label="One question through the network. The broker decides who to consult, waits, synthesises, and scores the risk of its own recommendation."><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahead" d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><text class="ttl" x="0" y="16">One question through the network</text><text class="sub" x="0" y="33">The broker decides who to consult, waits, synthesises, and scores the risk of its own recommendation.</text><rect class="node soft" x="320.0" y="52" width="140" height="30" rx="8"/><text class="lab bold" x="390.0" y="71.0" text-anchor="middle">a question</text><line class="flow" x1="390.0" y1="82" x2="390.0" y2="100" marker-end="url(#ah)"/><rect class="node lead" x="260.0" y="102" width="260" height="44" rx="8"/><text class="lab bold" x="390.0" y="121.0" text-anchor="middle">BROKER</text><text class="ax" x="390.0" y="136.0" text-anchor="middle">decides who to consult</text><line class="flow" x1="390.0" y1="146" x2="130.0" y2="204" marker-end="url(#ah)"/><rect class="node" x="70.0" y="206" width="120" height="46" rx="8"/><text class="lab bold" x="130.0" y="226.0" text-anchor="middle">Market Scout</text><text class="ax" x="130.0" y="241.0" text-anchor="middle">events, weather</text><line class="flow" x1="130.0" y1="252" x2="390.0" y2="294" marker-end="url(#ah)"/><line class="flow" x1="390.0" y1="146" x2="260.0" y2="204" marker-end="url(#ah)"/><rect class="node" x="200.0" y="206" width="120" height="46" rx="8"/><text class="lab bold" x="260.0" y="226.0" text-anchor="middle">Revenue</text><text class="ax" x="260.0" y="241.0" text-anchor="middle">pricing, rates</text><line class="flow" x1="260.0" y1="252" x2="390.0" y2="294" marker-end="url(#ah)"/><line class="flow" x1="390.0" y1="146" x2="390.0" y2="204" marker-end="url(#ah)"/><rect class="node" x="330.0" y="206" width="120" height="46" rx="8"/><text class="lab bold" x="390.0" y="226.0" text-anchor="middle">Content</text><text class="ax" x="390.0" y="241.0" text-anchor="middle">listing quality</text><line class="flow" x1="390.0" y1="252" x2="390.0" y2="294" marker-end="url(#ah)"/><line class="flow" x1="390.0" y1="146" x2="520.0" y2="204" marker-end="url(#ah)"/><rect class="node" x="460.0" y="206" width="120" height="46" rx="8"/><text class="lab bold" x="520.0" y="226.0" text-anchor="middle">Guest Exp.</text><text class="ax" x="520.0" y="241.0" text-anchor="middle">reviews</text><line class="flow" x1="520.0" y1="252" x2="390.0" y2="294" marker-end="url(#ah)"/><line class="flow" x1="390.0" y1="146" x2="650.0" y2="204" marker-end="url(#ah)"/><rect class="node" x="590.0" y="206" width="120" height="46" rx="8"/><text class="lab bold" x="650.0" y="226.0" text-anchor="middle">Facilities</text><text class="ax" x="650.0" y="241.0" text-anchor="middle">maintenance</text><line class="flow" x1="650.0" y1="252" x2="390.0" y2="294" marker-end="url(#ah)"/><text class="ax" x="390.0" y="274" text-anchor="middle">the specialists run in parallel, each returning its fixture</text><rect class="node lead" x="260.0" y="296" width="260" height="44" rx="8"/><text class="lab bold" x="390.0" y="315.0" text-anchor="middle">BROKER</text><text class="ax" x="390.0" y="330.0" text-anchor="middle">synthesises, scores risk</text><line class="flow" x1="390.0" y1="340" x2="390.0" y2="364" marker-end="url(#ah)"/><text class="ax" x="400.0" y="358">risk rule fires?</text><path class="flow" d="M 390 364 L 250 364 L 250 424" marker-end="url(#ah)"/><text class="ax" x="256" y="380">no</text><path class="flow" d="M 390 364 L 530 364 L 530 376" marker-end="url(#ah)"/><text class="ax" x="536" y="380">yes</text><rect class="node gate" x="440" y="378" width="180" height="32" rx="8"/><text class="lab bold" x="530.0" y="398.0" text-anchor="middle">HUMAN APPROVAL</text><path class="flow" d="M 530 410 L 530 439 L 322 439" marker-end="url(#ah)"/><text class="ax" x="530" y="468" text-anchor="middle">the approved text is returned verbatim</text><rect class="node soft" x="190" y="424" width="130" height="30" rx="8"/><text class="lab bold" x="255.0" y="443.0" text-anchor="middle">the answer</text></svg></div>
+      <figcaption>Figure 1. The broker fans out to the specialists it selected, fans back in, and
+      routes to a human only when its own risk rule fires. Two calls to the model per question,
+      one to route and one to synthesise; the specialists cost nothing because their answers are
+      fixtures.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>The specialists</h2>
+    <p>Each agent advertises what it is good at. That description is the only thing the broker
+    sees when it decides who to consult, which means adding an agent is a matter of describing
+    it well, not of editing a router.</p>
+    <div class="cards"><div class="card"><h3>Market Scout</h3><p>Watches events, weather and travel demand, so a booking dip can be traced to a cause outside the property.</p></div><div class="card"><h3>Revenue Strategist</h3><p>Compares your rates against the competitive set and recommends a move, with the reasoning attached.</p></div><div class="card"><h3>Content Specialist</h3><p>Audits the listing: photographs, description, amenity tags, and whether it will surface in the right filters.</p></div><div class="card"><h3>Guest Experience</h3><p>Reads reviews for sentiment and recurring operational complaints.</p></div><div class="card"><h3>Facilities Manager</h3><p>Knows the physical state of the property: housekeeping, maintenance, what is in the store cupboard.</p></div></div>
+  </section>
+
+  <section>
+    <h2>The same code, a different business</h2>
+    <p>The travel network is one configuration. Here is a second: a management consulting firm,
+    with five different specialists, a different router prompt, and a different definition of
+    risk. It runs on the same graph, loaded the same way, with nothing swapped but a path.</p>
+
+    <figure>
+      <div class="figbox"><svg class="fig diagram" viewBox="0 0 780 300" role="img" aria-label="Two businesses, one graph. Nothing below the configs changes. No node, no edge, no line of Python."><defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahead" d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><text class="ttl" x="0" y="16">Two businesses, one graph</text><text class="sub" x="0" y="33">Nothing below the configs changes. No node, no edge, no line of Python.</text><rect class="node" x="24" y="56" width="300" height="166" rx="8"/><text class="lab bold" x="36" y="78">config_travel.xml</text><text class="ax" x="36" y="100">Market Scout, Revenue Strategist,</text><text class="ax" x="36" y="122">Content Specialist, Guest Experience,</text><text class="ax" x="36" y="144">Facilities Manager</text><text class="ax" x="36" y="166"></text><text class="ax" x="36" y="188">Risk rule: changing prices or</text><text class="ax" x="36" y="210">publishing content needs a human.</text><line class="flow" x1="174.0" y1="226" x2="174.0" y2="232" marker-end="url(#ah)"/><rect class="node" x="456" y="56" width="300" height="166" rx="8"/><text class="lab bold" x="468" y="78">config_agency.xml</text><text class="ax" x="468" y="100">Market Analyst, Financial Modeler,</text><text class="ax" x="468" y="122">Organizational Strategist,</text><text class="ax" x="468" y="144">Operations Specialist, Risk &amp; Compliance</text><text class="ax" x="468" y="166"></text><text class="ax" x="468" y="188">Risk rule: layoffs, restructuring or</text><text class="ax" x="468" y="210">budget moves over $1M need a human.</text><line class="flow" x1="606.0" y1="226" x2="606.0" y2="232" marker-end="url(#ah)"/><rect class="node lead" x="240.0" y="232" width="300" height="44" rx="8"/><text class="lab bold" x="390.0" y="252" text-anchor="middle">the same graph</text><text class="ax" x="390.0" y="267" text-anchor="middle">agentic_network/graph.py, unchanged</text></svg></div>
+      <figcaption>Figure 2. Two configurations, one graph. The specialists, the prompts, the
+      scenarios and the risk rule are all data.</figcaption>
+    </figure>
+
+    <p>This is the part worth taking away. In most agent frameworks the roster is expressed in
+    code: a class per agent, a router with a branch per destination, edges wired by hand. That
+    works until the roster changes. Here, the graph is constructed at load time from whatever
+    the config declares, so a new agent is a new XML block and a new domain is a new file.</p>
+  </section>
+
+  <section>
+    <h2>The human gate</h2>
+    <p>Some recommendations are cheap to be wrong about. Reporting that guest sentiment is
+    neutral costs nothing if it is mistaken. Dropping your room rate by $50 is different, and so
+    is a recommendation to reduce headcount by ten percent. The synthesis step scores each
+    answer against a rule from the config, and anything above the line stops for a person.</p>
+
+    <p>Building this surfaced a defect worth repeating, because it is easy to reproduce and it
+    defeats the entire purpose of an approval gate. In the original, approval routed back
+    through the broker, which re-ran synthesis. The answer the user received was therefore a
+    second generation, sometimes carrying a different risk verdict than the one they had just
+    been shown and approved. In one recorded run the human approved a proposal marked
+    <code>RISK: YES</code> and the system returned an answer marked <code>RISK: NO</code>.</p>
+
+    <p>The gate is now terminal: it returns the approved text verbatim, and a test asserts that
+    the proposal appears unchanged in the final answer. If you build one of these, put that
+    assertion in early.</p>
+  </section>
+
+  <section>
+    <h2>Read on</h2>
     <div class="cards">
-      <div class="card">
-        <h3><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a></h3>
-        <p>What is in it.</p>
-        <span class="tag">Open</span>
-      </div>
-      <div class="card">
-        <h3><a href="#">Another page</a></h3>
-        <p>What it holds.</p>
-        <span class="tag soon">Coming soon</span>
-      </div>
+      <div class="card"><h3>The architecture</h3><p>The state machine, how the roster becomes
+      nodes at load time, and how the output channel keeps the graph independent of its front
+      end.</p></div>
+      <div class="card"><h3>The code</h3><p>Python and XML side by side, showing one graph
+      serving two domains.</p></div>
+      <div class="card"><h3>Running it</h3><p>Install, key setup, what it costs, and a Colab
+      notebook you can run yourself.</p></div>
     </div>
+    <p class="cta"><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Browse the repository</a> ·
+       <a href="https://colab.research.google.com/github/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Open the notebook in Colab</a></p>
   </section>
 
 </div>
@@ -84,7 +148,10 @@
 
 <footer class="site">
   <div class="wrap">
-    <p>By John Fisher.</p>
+    <p>Built by John Fisher. Code under the MIT license.
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a> ·
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Notebook</a></p>
+    <p class="sig">The orchestration runs. Every agent reply is a fixture: no vendor API is called.</p>
   </div>
 </footer>
 

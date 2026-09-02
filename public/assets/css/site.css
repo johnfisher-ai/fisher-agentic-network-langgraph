@@ -201,3 +201,12 @@ ol.refs li { counter-increment:r; margin:0 0 .7rem; padding-left:2.6rem; positio
 ol.refs li::before { content:"[" counter(r) "]"; position:absolute; left:0; top:0;
                      color:var(--accent); font-variant-numeric:tabular-nums; }
 ol.refs li a { word-break:break-word; }
+
+/* ---- flow diagrams (tools/diagram.py) --------------------------------- */
+svg.diagram .node   { fill:var(--panel); stroke:var(--line); stroke-width:1.5; }
+svg.diagram .soft   { fill:var(--bg); stroke:var(--fig-axis); stroke-dasharray:4 3; }
+svg.diagram .lead   { fill:var(--accent-soft); stroke:var(--accent); stroke-width:2; }
+svg.diagram .gate   { fill:var(--panel); stroke:var(--s2); stroke-width:2.5; }
+svg.diagram .flow   { stroke:var(--fig-axis); stroke-width:1.5; fill:none; }
+svg.diagram .ahead  { fill:var(--fig-axis); stroke:none; }
+svg.diagram text    { paint-order:stroke; }

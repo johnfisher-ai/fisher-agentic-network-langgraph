@@ -1,23 +1,19 @@
 #!/usr/bin/env bash
-# Rebuild generated pages. Run from anywhere:
+# Rebuild every generated page.
 #
-#   bash tools/build.sh          # rebuild pages from committed derived data
-#   bash tools/build.sh --all    # also recompute from raw material in ../source/
+#   bash tools/build.sh
 #
-# Stages marked [raw] need uncommitted source material. On a machine without it, use the
-# default: every page rebuilds from the aggregate files in tools/derived/.
+# Pages in public/ are GENERATED. Editing them by hand loses the change on the next
+# build; edit the builder in tools/ instead. Nothing here needs an API key or a
+# network: the page numbers are read from the config files in config/.
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 PY=${PYTHON:-python3}
-ALL=${1:-}
 
 run () { echo; echo "==> $1"; shift; "$@"; }
 
-if [ "$ALL" = "--all" ]; then
-  : # run "[raw] compute something" $PY compute_something.py
-fi
-
-: # run "pages: x" $PY build_x.py
+run "check the configs still load"   $PY -m tests.test_network
+run "page: overview (index.html)"    $PY tools/build_index.py
 
 echo
-echo "==> done. public/index.html is hand-maintained and is not generated."
+echo "==> done."
