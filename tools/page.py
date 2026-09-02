@@ -9,6 +9,11 @@ from pathlib import Path
 
 SITE = "https://johnfisher-ai.github.io/fisher-agentic-network-langgraph"
 REPO = "https://github.com/johnfisher-ai/fisher-agentic-network-langgraph"
+FIXTURES = ("The orchestration runs: the LangGraph state machine, the routing, the synthesis "
+            "and the human gate all execute against <code>gpt-4o</code>. "
+            "<strong>Every agent response is a fixture read from the XML.</strong> "
+            "No vendor API is called, and no MCP server exists.")
+
 COLAB = ("https://colab.research.google.com/github/johnfisher-ai/"
          "fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb")
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
@@ -109,8 +114,7 @@ def foot(filename: str = ""):
 <footer class="site">
   <div class="wrap">
     {_pager(filename)}
-    <p class="sig">Built by John Fisher. Code under the MIT license.
-       The orchestration runs; every agent reply is a fixture, and no vendor API is called.</p>
+    <p class="sig">Built by John Fisher. Code under the MIT license.</p>
   </div>
 </footer>
 

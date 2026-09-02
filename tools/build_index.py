@@ -99,10 +99,7 @@ def build():
     </div>
 
     <div class="note">
-      <p><strong>What is real, and what is not.</strong> The orchestration runs: the LangGraph
-      state machine, the LLM-driven routing, the synthesis step, the risk scoring and the human
-      interrupt all execute against <code>gpt-4o</code>. <strong>Every agent response is a
-      fixture read from the XML.</strong> No vendor API is called, and no MCP server exists.
+      <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
       The design notes name candidate integrations, rate-shopping feeds, property management
       systems, flight capacity data; none of them are built.</p>
       <p>That is deliberate. Canned agent replies keep the demo deterministic and nearly free to

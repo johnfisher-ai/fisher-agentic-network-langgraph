@@ -69,6 +69,14 @@ def build():
     two XML files hold everything that makes one network different from another. The Python
     does not know which domain it is running.</p>
 
+    <div class="note">
+      <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
+      Every <code>response</code> element you see below is canned text, not a call. That keeps
+      the demo deterministic and nearly free to run, and it means the seam where a real
+      integration would attach is a single method,
+      <code>Agent.reply_for</code>.</p>
+    </div>
+
     <div class="scroll">
       <table class="stats">
         <thead><tr><th>File</th><th class="num">Lines</th><th>What it does</th></tr></thead>
