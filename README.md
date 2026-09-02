@@ -4,6 +4,9 @@ An exploration of [LangChain](https://python.langchain.com/) and
 [LangGraph](https://langchain-ai.github.io/langgraph/): a network of specialist AI agents
 coordinated by a broker, with a human approval gate on anything risky.
 
+**[Read the write-up](https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/)** for the design, the architecture, the code
+and how to run it, or clone the repository and ask it something yourself.
+
 The point of the project is that **the network is data, not code**. The agent roster, the
 routing and synthesis prompts, the demo scenarios and every agent's reply live in an XML file.
 Point the loader at a different file and the same graph becomes a different business.
@@ -86,12 +89,14 @@ its own dependencies. You supply a key.
 
 ## Live site
 
-| Page | What it holds | Status |
-|---|---|---|
-| **Overview** | What the network is, the agent roles, and the business framing. | Planned |
-| **Architecture** | The state machine, the fan-out and fan-in, the human gate, and the config-driven design. | Planned |
-| **The code** | Python and XML side by side, showing one graph serving two domains. | Planned |
-| **Running it** | Install, key setup, cost, and the Colab link. | Planned |
+**[https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/](https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/)**
+
+| Page | What it holds |
+|---|---|
+| **[Overview](https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/)** | What the network is, the specialists, and the same graph running a second business. |
+| **[Architecture](https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/architecture.html)** | Shared state and its reducer, nodes generated from config, the output channel, and the human gate. |
+| **[The code](https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/code.html)** | A measured file map, the config format, and the two configurations set against each other. |
+| **[Running it](https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/run.html)** | Install, three ways to supply a key, what it costs, and real terminal output from every entry point. |
 
 ---
 
