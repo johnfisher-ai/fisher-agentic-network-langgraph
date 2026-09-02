@@ -30,6 +30,7 @@ def _nav(current: str) -> str:
         aria = ' aria-current="page"' if filename == current else ""
         out.append(f'<a href="{href}"{aria}>{esc(label)}</a>')
     out.append(f'<a href="{REPO}">Repository</a>')
+    out.append(f'<a href="{COLAB}">Colab</a>')
     out.append("</div></nav>")
     return "".join(out)
 
@@ -79,18 +80,37 @@ def head(*, filename, title, tab_title, description, card_title, card_desc, kick
 """
 
 
-def foot():
+def _pager(current: str) -> str:
+    """Previous and next through the four pages, in reading order."""
+    seq = [(href, fn, label) for href, fn, label in PAGES if (PUBLIC / fn).exists()]
+    idx = next((i for i, (_, fn, _) in enumerate(seq) if fn == current), None)
+    if idx is None:
+        return ""
+    out = ['<nav class="pager">']
+    if idx > 0:
+        href, _, label = seq[idx - 1]
+        out.append(f'<a class="prev" href="{href}"><span>Previous</span><b>{esc(label)}</b></a>')
+    else:
+        out.append("<span></span>")
+    if idx < len(seq) - 1:
+        href, _, label = seq[idx + 1]
+        out.append(f'<a class="next" href="{href}"><span>Next</span><b>{esc(label)}</b></a>')
+    else:
+        out.append("<span></span>")
+    out.append("</nav>")
+    return "".join(out)
+
+
+def foot(filename: str = ""):
     return f"""
 </div>
 </main>
 
 <footer class="site">
   <div class="wrap">
-    <p>Built by John Fisher. Code under the MIT license.
-       <a href="{REPO}">Repository</a> ·
-       <a href="{REPO}/blob/main/notebooks/agentic_network.ipynb">Notebook</a> ·
-       <a href="{COLAB}">Open in Colab</a></p>
-    <p class="sig">The orchestration runs. Every agent reply is a fixture: no vendor API is called.</p>
+    {_pager(filename)}
+    <p class="sig">Built by John Fisher. Code under the MIT license.
+       The orchestration runs; every agent reply is a fixture, and no vendor API is called.</p>
   </div>
 </footer>
 

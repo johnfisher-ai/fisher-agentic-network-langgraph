@@ -164,7 +164,7 @@ def build():
     <p>To run any of it, see {run_link}.</p>
   </section>
 """
-    body += page.foot()
+    body += page.foot("code.html")
     page.write("code.html", body)
 
 

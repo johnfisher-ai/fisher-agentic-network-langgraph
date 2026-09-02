@@ -181,7 +181,7 @@ def build():
     {py(excerpt.named("agentic_network/config.py", "Agent", inner="reply_for"))}
   </section>
 """
-    body += page.foot()
+    body += page.foot("architecture.html")
     page.write("architecture.html", body)
 
 

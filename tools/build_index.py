@@ -173,7 +173,7 @@ def build():
   </section>
 
 """
-    body += page.foot()
+    body += page.foot("index.html")
     page.write("index.html", body)
 
 

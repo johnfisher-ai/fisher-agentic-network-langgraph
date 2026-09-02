@@ -161,7 +161,7 @@ python3 -m agentic_network.cli -c config/config_mine.xml "your question here"'''
     at least one agent, it will run.</p>
   </section>
 """
-    body += page.foot()
+    body += page.foot("run.html")
     page.write("run.html", body)
 
 

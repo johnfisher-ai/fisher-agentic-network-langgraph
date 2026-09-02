@@ -217,3 +217,23 @@ svg.diagram text    { paint-order:stroke; }
 .side > * { margin:0; min-width:0; }
 .side pre.code { font-size:.72rem; white-space:pre-wrap; overflow-wrap:anywhere; }
 .side pre.code { min-width:0; }
+
+/* ---- previous / next through the pages -------------------------------- */
+.pager { display:flex; justify-content:space-between; align-items:stretch; gap:1rem;
+         margin:0 0 1.2rem; }
+.pager a { display:block; text-decoration:none;
+           border:1px solid var(--line); border-radius:8px; padding:.6rem .95rem;
+           background:var(--bg); font-weight:600; color:var(--ink); max-width:48%; }
+.pager a:hover { border-color:var(--accent); }
+.pager a span { display:block; font-size:.72rem; font-weight:400; color:var(--soft);
+                text-transform:uppercase; letter-spacing:.06em; margin-bottom:.15rem; }
+.pager .next { text-align:right; }
+.pager b { font-weight:600; }
+.pager .prev b::before { content:"\2190\00a0"; color:var(--soft); }
+.pager .next b::after  { content:"\00a0\2192"; color:var(--soft); }
+
+/* The nav scrolls horizontally by default. Below 46rem that hides the last
+   items with no affordance, so let it wrap onto a second line instead. */
+@media (max-width: 46rem) {
+  nav.site .wrap { flex-wrap: wrap; overflow-x: visible; row-gap: .25rem; }
+}
