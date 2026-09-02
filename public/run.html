@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Running it · A Config-Driven Agent Network</title>
+<meta name="description" content="Clone, install, supply an API key three different ways, and run the agent network from a terminal, a desktop window, or Colab. Tests run without a key.">
+<link rel="canonical" href="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/run.html">
+<meta name="author" content="John Fisher">
+<meta name="theme-color" content="#2f5d94">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="A Config-Driven Agent Network">
+<meta property="og:title" content="Run the agent network yourself">
+<meta property="og:description" content="Install, key setup, and what it costs. Two calls to the model per question, a fraction of a cent. The test suite needs no key at all.">
+<meta property="og:url" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/run.html">
+<meta property="og:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="A broker agent fanning out to five specialist agents, with a human approval gate on the risky path.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Run the agent network yourself">
+<meta name="twitter:description" content="Install, key setup, and what it costs. Two calls to the model per question, a fraction of a cent. The test suite needs no key at all.">
+<meta name="twitter:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="kicker">Clone it and ask it something</p>
+    <h1>Running it</h1>
+    <p class="byline">Install, keys, cost, and the three ways to run it.</p>
+  </div>
+</header>
+
+<nav class="site"><div class="wrap"><a href="./">Overview</a><a href="architecture.html">Architecture</a><a href="code.html">The code</a><a href="run.html" aria-current="page">Running it</a><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a></div></nav>
+
+<main>
+<div class="wrap">
+
+  <section>
+    <p class="lede">Everything runs from the repository root, and the package needs no install
+    step of its own. The only thing you have to supply is an OpenAI key, and only for the two
+    calls the broker makes per question. The test suite runs without one.</p>
+  </section>
+
+  <section>
+    <h2>Get it</h2>
+    <p>Python 3.10 or newer, which is what the LangChain packages require. Developed and tested
+    on 3.14.</p>
+
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">git clone https://github.com/johnfisher-ai/fisher-agentic-network-langgraph.git
+cd fisher-agentic-network-langgraph
+python3 -m pip install -r requirements.txt</pre></div>
+
+    <p>Four dependencies, pinned to the versions this was built against:</p>
+    <div class="codewrap"><div class="head"><code>requirements.txt</code></div><pre class="code">langgraph==1.0.10
+langchain==1.2.10
+langchain-openai==1.1.11
+python-dotenv&gt;=1.0.0</pre></div>
+
+    <p>Use <code>python3 -m pip</code> rather than <code>pip</code>. It guarantees the install
+    lands in the same interpreter that will run the code, which is the difference between
+    working and a confusing import error on a machine with more than one Python.</p>
+  </section>
+
+  <section>
+    <h2>Your API key</h2>
+    <p>The key is read from the environment. It is never written into a file that gets
+    committed, and nothing in the project prints it.</p>
+
+    <p><strong>A .env file</strong>, which is the easiest locally. It is listed on the first
+    line of <code>.gitignore</code>.</p>
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">cp .env.example .env
+# then put your key in .env:
+#     OPENAI_API_KEY=sk-...</pre></div>
+
+    <p><strong>Your shell</strong>, if you would rather not have the file at all.</p>
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">export OPENAI_API_KEY=sk-...</pre></div>
+
+    <p><strong>Colab</strong>: the key icon in the left sidebar, with the secret named
+    <code>OPENAI_API_KEY</code>. The notebook picks it up without any edit.</p>
+
+    <p>Check it worked. This makes one tiny call and prints a masked prefix, never the key
+    itself.</p>
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">python3 scripts/check_key.py</pre></div>
+    <div class="codewrap"><div class="head"><code>output</code></div><pre class="code">loaded: sk-proj-abc...WXYZ  (length 164)
+live call: ok
+PASS - the new key works.</pre></div>
+  </section>
+
+  <section>
+    <h2>What it costs</h2>
+    <p>Two calls to <code>gpt-4o</code> per question: one to choose which specialists to
+    consult, one to synthesise their findings and score the risk. A fraction of a cent.</p>
+    <p>The specialists themselves cost nothing. Their answers are fixtures read from the config
+    file, so the number of agents consulted does not change the bill.</p>
+  </section>
+
+  <section>
+    <h2>Ask it something</h2>
+    <p>A question that only reports. No approval needed.</p><div class="codewrap"><div class="head"><code>command</code></div><pre class="code">python3 -m agentic_network.cli --verbose --yes &quot;Check the recent guest reviews and tell me the general sentiment.&quot;</pre></div><div class="codewrap"><div class="head"><code>output</code><span>a real run</span></div><pre class="code clip">[trace]  scenario 1 selected for: &#x27;Check the recent guest reviews and tell me the general sentiment.&#x27;
+[status] Analysing intent ...
+[status] Delegating to guest_experience
+[status] Consulting Guest Experience ...
+[trace]  Guest Experience returned: {&quot;sentiment&quot;: &quot;Neutral&quot;, &quot;recent_issues&quot;: &quot;None&quot;}
+[status] Synthesising and scoring risk ...
+[trace]  synthesis complete, requires_approval=False
+The general sentiment of the recent guest reviews is neutral, and there have been no recent issues reported.
+
+RISK: NO
+[status] Ready</pre></div>
+    <p>A recommendation to change prices. The gate fires.</p><div class="codewrap"><div class="head"><code>command</code></div><pre class="code">python3 -m agentic_network.cli --yes &quot;My bookings for November are down 20%. Diagnose this.&quot;</pre></div><div class="codewrap"><div class="head"><code>output</code><span>a real run</span></div><pre class="code clip">==============================================================
+HUMAN APPROVAL REQUIRED
+==============================================================
+1. Your bookings for November are down 20% due to a combination of factors. The cancellation of the &quot;Tech Summit&quot; event has negatively impacted demand, as noted by the Market Scout. Additionally, your current rate of $250 is higher than the competitor&#x27;s rate of $200. The Revenue Strategist recommends dropping your rate by $50 to align more closely with the competition and potentially increase bookings.
+
+2. DETERMINE RISK: The recommendation involves changing PRICES by dropping your rate. Therefore, the output is &quot;RISK: YES&quot;.
+==============================================================
+(auto_approve=True: approved without prompting)
+1. Your bookings for November are down 20% due to a combination of factors. The cancellation of the &quot;Tech Summit&quot; event has negatively impacted demand, as noted by the Market Scout. Additionally, your current rate of $250 is higher than the competitor&#x27;s rate of $200. The Revenue Strategist recommends dropping your rate by $50 to align more closely with the competition and potentially increase bookings.
+
+2. DETERMINE RISK: The recommendation involves changing PRICES by dropping your rate. Therefore, the output is &quot;RISK: YES&quot;.
+
+[STATUS: APPROVED BY HUMAN, EXECUTED]</pre></div>
+
+    <p><code>--yes</code> and <code>--no</code> answer the approval gate without prompting,
+    which is what lets a notebook run unattended. Leave both off and it asks.</p>
+
+    <p>The same kind of question, with the human declining.</p><div class="codewrap"><div class="head"><code>command</code></div><pre class="code">python3 -m agentic_network.cli --no &quot;My competitor dropped their rates. Should I match them?&quot;</pre></div><div class="codewrap"><div class="head"><code>output</code><span>a real run</span></div><pre class="code clip">==============================================================
+HUMAN APPROVAL REQUIRED
+==============================================================
+Based on the data, your competitor has dropped their rates by $30. The recommendation is to either match the competitor&#x27;s rate or add value to your offering to remain competitive. 
+
+RISK: YES
+==============================================================
+(auto_approve=False: rejected without prompting)
+ACTION CANCELLED. The human operator rejected the proposal.
+
+What was proposed:
+Based on the data, your competitor has dropped their rates by $30. The recommendation is to either match the competitor&#x27;s rate or add value to your offering to remain competitive. 
+
+RISK: YES</pre></div>
+    <p>The other config. Same command, same code.</p><div class="codewrap"><div class="head"><code>command</code></div><pre class="code">python3 -m agentic_network.cli --verbose --yes -c config/config_agency.xml &quot;Our client has massive supply chain delays from overseas suppliers.&quot;</pre></div><div class="codewrap"><div class="head"><code>output</code><span>a real run</span></div><pre class="code clip">[trace]  scenario 1 selected for: &#x27;Our client has massive supply chain delays from overseas suppliers.&#x27;
+[status] Analysing intent ...
+[status] Delegating to operations_specialist
+[status] Consulting Operations Specialist ...
+[trace]  Operations Specialist returned: {&quot;bottleneck&quot;: &quot;Tier-1 Suppliers&quot;, &quot;action&quot;: &quot;Activate secondary suppliers in LATAM to bypass current port congestion.&quot;}
+[status] Synthesising and scoring risk ...
+[trace]  synthesis complete, requires_approval=False
+**Executive-Level Consulting Recommendation:**
+
+Our analysis indicates that the primary bottleneck in your supply chain is currently at the Tier-1 supplier level, primarily due to significant port congestion affecting overseas suppliers. To mitigate these delays and ensure continuity in your supply chain operations, we recommend activating secondary suppliers located in Latin America (LATAM). This strategic move will allow you to bypass the current congestion issues and maintain a steady flow of goods.
+
+**Key Actions:**
+1. **Engage Secondary Suppliers:** Initiate contracts and logistics with pre-identified secondary suppliers in LATAM to diversify your supply chain sources.
+2. **Logistics Optimization:** Work with logistics partners to streamline transportation routes from LATAM to your distribution centers, ensuring minimal disruption and cost efficiency.
+3. **Risk Management:** Continuously monitor the performance and reliability of these secondary suppliers to ensure they meet your quality and delivery standards.
+
+**Benefits:**
+- Reduced dependency on congested overseas ports.
+- Enhanced supply chain resilience and flexibility.
+- Potential cost savings from reduced shipping delays and penalties.
+
+**DETERMINE RISK:**
+RISK: NO
+
+This recommendation focuses on supply chain diversification and optimization without suggesting layoffs, significant budget reallocations, or major restructuring.
+[status] Ready</pre></div>
+
+    <p>Note what changed in that last one: a config path. The command, the code and the graph
+    are identical.</p>
+  </section>
+
+  <section>
+    <h2>The desktop client</h2>
+    <p>A tkinter window with a chat pane and a live agent trace log, where the approval gate is
+    answered by a person rather than a flag.</p>
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">python3 -m agentic_network.gui
+python3 -m agentic_network.gui --config config/config_agency.xml</pre></div>
+    <p>It needs a display, so it does not run in Colab or over a plain SSH session. In those
+    places use the headless path above.</p>
+  </section>
+
+  <section>
+    <h2>The notebook</h2>
+    <p>The notebook carries the design notes and a runnable walkthrough. On Colab it clones the
+    repository and installs its own dependencies, so the only thing you supply is the key.</p>
+    <p class="cta">
+      <a href="https://colab.research.google.com/github/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Open in Colab</a>
+      <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">View on GitHub</a>
+    </p>
+  </section>
+
+  <section>
+    <h2>The tests need no key</h2>
+    <p>19 checks against a stub model: nothing is sent anywhere and nothing is spent.
+    They cover scenario matching, both branches of the approval gate, malformed router output,
+    and both configurations.</p>
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">python3 -m tests.test_network</pre></div>
+    <p>This is the quickest way to confirm a clone is working before you decide whether to
+    spend anything on a key.</p>
+  </section>
+
+  <section>
+    <h2>Writing your own network</h2>
+    <p>Copy either config and edit it. A network needs the two broker prompts, a list of
+    scenarios with keywords, and the agents, each with a description and one canned reply per
+    scenario. The <a href="code.html">code page</a> walks through the format.</p>
+    <div class="codewrap"><div class="head"><code>shell</code></div><pre class="code">cp config/config_travel.xml config/config_mine.xml
+python3 -m agentic_network.cli -c config/config_mine.xml &quot;your question here&quot;</pre></div>
+    <p>Nothing in <code>agentic_network/</code> needs to change. If the file parses and declares
+    at least one agent, it will run.</p>
+  </section>
+
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Built by John Fisher. Code under the MIT license.
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a> ·
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Notebook</a></p>
+    <p class="sig">The orchestration runs. Every agent reply is a fixture: no vendor API is called.</p>
+  </div>
+</footer>
+
+</body>
+</html>

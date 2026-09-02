@@ -92,16 +92,21 @@ def xml(src: str) -> str:
     return "".join(out)
 
 
+def plain(src: str) -> str:
+    """No highlighting. For terminal transcripts and shell commands."""
+    return html.escape(src)
+
+
 def block(src: str, lang: str = "python") -> str:
     """A complete <pre class="code"> block."""
-    fn = {"python": python, "xml": xml}[lang]
+    fn = {"python": python, "xml": xml, "text": plain}[lang]
     return f'<pre class="code">{fn(src.strip())}</pre>'
 
 
 def wrap(src: str, lang: str = "python", *, name: str = "", note: str = "",
          clip: bool = False) -> str:
     """A titled code panel: filename on the left, a note on the right."""
-    fn = {"python": python, "xml": xml}[lang]
+    fn = {"python": python, "xml": xml, "text": plain}[lang]
     head = ""
     if name or note:
         left = f"<code>{html.escape(name)}</code>" if name else ""
