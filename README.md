@@ -29,13 +29,20 @@ changes, no code changes at all.
 synthesis step, the risk scoring and the human-in-the-loop interrupt all genuinely execute
 against `gpt-4o`.
 
-**Every agent response is a fixture read from the XML.** No vendor API is called. The design
+**Every agent's answer is written into the config file in advance**, in its `<mock_data>`
+block. Nothing is fetched: no vendor API is called. The design
 notes name candidate integrations (rate-shopping feeds, property management systems, flight
 capacity data, ticketing systems) and mention MCP servers; **none of that is implemented.**
 
-That is deliberate. Canned agent replies make the demo deterministic, reproducible and nearly
-free to run, so the orchestration is the thing under examination rather than five API
-integrations. Replacing a fixture with a real call is a one-function change in
+That is a data-protection decision before it is a convenience one. Wired to live systems, a
+network like this would read real rates, booking records and guest reviews, and forward whatever
+it found to a language model. With every answer written in advance, the only things that leave
+your machine are the question you type and text you can read in this repository. It also makes a
+run repeatable, which is what lets the test suite exercise the real graph with no key, no network
+and nothing spent.
+
+Canned answers also make the demo deterministic and nearly free to run, so the orchestration is the thing under examination rather than five API
+integrations. Replacing a canned answer with a real call is a one-function change in
 [`agentic_network/graph.py`](agentic_network/graph.py).
 
 This is a study of a pattern. It is not a product, and no claim here about business outcomes
@@ -124,7 +131,7 @@ python3 scripts/check_key.py
 key itself. In Colab, use the key icon in the sidebar and name the secret `OPENAI_API_KEY`.
 
 **Cost:** two `gpt-4o` calls per question, one to route and one to synthesise. A fraction of a
-cent. The agents themselves cost nothing, because their answers are fixtures.
+cent. The agents themselves cost nothing, because their answers were written in advance.
 
 ### Ask it something
 

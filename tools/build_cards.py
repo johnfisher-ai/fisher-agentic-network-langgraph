@@ -35,7 +35,7 @@ VALUES = {
     "STAT1_N": "2",           "STAT1_L": "agent networks, one graph",
     "STAT2_N": str(AGENTS),   "STAT2_L": "agents across both",
     "STAT3_N": "0",           "STAT3_L": "code changes to swap domain",
-    "FOOTNOTE": "The orchestration runs. Agent replies are fixtures: no vendor API is called.",
+    "FOOTNOTE": "The orchestration runs. Every agent answer is written into the config: nothing is fetched.",
 
     # GitHub card: four feature cards and four tags
     "CARD1_T": "Broker and specialists",

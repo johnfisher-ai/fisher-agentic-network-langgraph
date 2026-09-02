@@ -44,19 +44,17 @@
     does not know which domain it is running.</p>
 
     <div class="note">
-      <p><strong>What is real, and what is not.</strong> The orchestration runs: the LangGraph state machine, the routing, the synthesis and the human gate all execute against <code>gpt-4o</code>. <strong>Every agent response is a fixture read from the XML.</strong> No vendor API is called, and no MCP server exists.
-      Every <code>response</code> element you see below is canned text, not a call. That keeps
-      the demo deterministic and nearly free to run, and it means the seam where a real
-      integration would attach is a single method,
-      <code>Agent.reply_for</code>.</p>
+      <p><strong>What is real, and what is not.</strong> The orchestration runs: the LangGraph state machine, the routing, the synthesis and the human gate all execute against <code>gpt-4o</code>. <strong>Every agent's answer is written into the config file in advance</strong>, in its <code>&lt;mock_data&gt;</code> block. Nothing is fetched: no vendor API is called, and no MCP server exists.
+      Every <code>response</code> element below is text somebody typed, not a call.</p>
+      <p>That is a data-protection decision before it is a convenience one. Wired to live systems, a network like this would read real rates, booking records and guest reviews, and forward whatever it found to a language model. With every answer written in advance, the only things that leave your machine are the question you type and text you can read in this repository. It also makes a run repeatable, which is what lets the test suite exercise the real graph with no key, no network and nothing spent.</p>
     </div>
 
     <div class="scroll">
       <table class="stats">
         <thead><tr><th>File</th><th class="num">Lines</th><th>What it does</th></tr></thead>
-        <tbody><tr><td class="item"><code>agentic_network/config.py</code></td><td class="num">119</td><td>Parses a config into dataclasses and picks a scenario.</td></tr><tr><td class="item"><code>agentic_network/graph.py</code></td><td class="num">197</td><td>Builds and compiles the state machine. The core.</td></tr><tr><td class="item"><code>agentic_network/channels.py</code></td><td class="num">108</td><td>Where output goes and where human answers come from.</td></tr><tr><td class="item"><code>agentic_network/cli.py</code></td><td class="num">67</td><td>Headless entry point. What the notebook and Colab use.</td></tr><tr><td class="item"><code>agentic_network/gui.py</code></td><td class="num">204</td><td>The tkinter desktop client.</td></tr><tr><td class="item"><code>agentic_network/__init__.py</code></td><td class="num">22</td><td>The public surface: three names.</td></tr><tr><td class="item"><code>tests/test_network.py</code></td><td class="num">112</td><td>Nineteen checks against a stub model. No key needed.</td></tr><tr><td class="item"><code>config/config_travel.xml</code></td><td class="num">105</td><td>The travel partner network.</td></tr><tr><td class="item"><code>config/config_agency.xml</code></td><td class="num">114</td><td>The consulting firm.</td></tr></tbody>
+        <tbody><tr><td class="item"><code>agentic_network/config.py</code></td><td class="num">120</td><td>Parses a config into dataclasses and picks a scenario.</td></tr><tr><td class="item"><code>agentic_network/graph.py</code></td><td class="num">197</td><td>Builds and compiles the state machine. The core.</td></tr><tr><td class="item"><code>agentic_network/channels.py</code></td><td class="num">108</td><td>Where output goes and where human answers come from.</td></tr><tr><td class="item"><code>agentic_network/cli.py</code></td><td class="num">67</td><td>Headless entry point. What the notebook and Colab use.</td></tr><tr><td class="item"><code>agentic_network/gui.py</code></td><td class="num">204</td><td>The tkinter desktop client.</td></tr><tr><td class="item"><code>agentic_network/__init__.py</code></td><td class="num">22</td><td>The public surface: three names.</td></tr><tr><td class="item"><code>tests/test_network.py</code></td><td class="num">112</td><td>Nineteen checks against a stub model. No key needed.</td></tr><tr><td class="item"><code>config/config_travel.xml</code></td><td class="num">105</td><td>The travel partner network.</td></tr><tr><td class="item"><code>config/config_agency.xml</code></td><td class="num">114</td><td>The consulting firm.</td></tr></tbody>
         <tfoot><tr><td class="item"><strong>Total</strong></td>
-          <td class="num"><strong>1048</strong></td><td></td></tr></tfoot>
+          <td class="num"><strong>1049</strong></td><td></td></tr></tfoot>
       </table>
     </div>
   </section>
@@ -64,7 +62,7 @@
   <section>
     <h2>What a config declares</h2>
     <p>Four things: the prompt the broker routes with, the prompt it synthesises and scores risk
-    with, the scenarios that select which fixture each agent returns, and the agents
+    with, the scenarios that select which reply each agent returns, and the agents
     themselves.</p>
 
     <div class="codewrap"><div class="head"><code>config/config_travel.xml</code><span>one agent</span></div><pre class="code"><span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;revenue_strategist&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Revenue Strategist&quot;</span><span class="sas-k">&gt;</span>
@@ -80,7 +78,7 @@
 
     <p>The <code>description</code> is the only thing the broker sees when it decides who to
     consult, so it is doing real work despite being three words. Each
-    <code>response</code> is the fixture that agent returns for one scenario, and
+    <code>response</code> is the reply that agent gives for one scenario, and
     <code>default</code> covers anything unmatched.</p>
 
     <p>Scenarios are keyword lists. A question is tested against them in document order and the
@@ -128,7 +126,7 @@
               <td>Market Intelligence Analyst<br>Financial Modeler<br>Organizational Strategist<br>Operations Specialist<br>Risk & Compliance Officer</td></tr>
           <tr><td class="item">Scenarios</td>
               <td>5</td><td>5</td></tr>
-          <tr><td class="item">Fixtures</td>
+          <tr><td class="item">Canned replies</td>
               <td>25</td>
               <td>25</td></tr>
           <tr><td class="item">Lines of Python that differ</td>
@@ -409,7 +407,7 @@ Shape of a run:
 
     user question
         -&gt; broker            decides which specialists to consult
-        -&gt; specialists       fan out in parallel, each returns its fixture
+        -&gt; specialists       fan out in parallel, each returns its canned reply
         -&gt; broker            synthesises one answer and scores its risk
         -&gt; human_approval    only when the risk score says so
         -&gt; END
@@ -600,7 +598,7 @@ Every node is generated from the config, so the roster is data rather than code.
         channel.log(<span class="sas-s">&quot;router named no valid agents; falling back.&quot;</span>)
         <span class="sas-k">return</span> fallback
     <span class="sas-k">return</span> known</pre></div></details>
-    <details class="src"><summary>agentic_network/config.py, 119 lines</summary><div class="codewrap"><div class="head"><code>agentic_network/config.py</code></div><pre class="code clip"><span class="sas-s">&quot;&quot;&quot;Load an agent network definition from XML.
+    <details class="src"><summary>agentic_network/config.py, 120 lines</summary><div class="codewrap"><div class="head"><code>agentic_network/config.py</code></div><pre class="code clip"><span class="sas-s">&quot;&quot;&quot;Load an agent network definition from XML.
 
 One XML file describes a whole network: the prompt the broker uses to route, the
 prompt it uses to synthesise, the demo scenarios, and for each agent its identity,
@@ -626,9 +624,10 @@ its advertised capability and its canned reply per scenario.
     replies: <span class="sas-p">dict</span>[<span class="sas-p">int</span>, <span class="sas-p">str</span>] = field(default_factory=<span class="sas-p">dict</span>)
 
     <span class="sas-k">def</span> reply_for(<span class="sas-p">self</span>, scenario_id: <span class="sas-p">int</span>) -&gt; <span class="sas-p">str</span>:
-        <span class="sas-s">&quot;&quot;&quot;The fixture this agent returns for a scenario.
+        <span class="sas-s">&quot;&quot;&quot;The canned reply this agent gives for a scenario.
 
-        Every reply is canned. No agent calls a real API; see the project README.
+        Every reply is written into the config in advance. No agent calls a real
+        API, so no live business data passes through this network.
         &quot;&quot;&quot;</span>
         <span class="sas-k">return</span> <span class="sas-p">self</span>.replies.get(scenario_id, <span class="sas-p">self</span>.default_reply)
 

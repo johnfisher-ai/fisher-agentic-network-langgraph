@@ -55,7 +55,7 @@ def network_flow(agents, title, subtitle):
         o.append(_arrow(x + bw / 2, ay + 46, cx, 294))
 
     o.append(f'<text class="ax" x="{cx}" y="274" text-anchor="middle">'
-             'the specialists run in parallel, each returning its fixture</text>')
+             'the specialists run in parallel, each returning its canned reply</text>')
 
     o.append(_box(cx - 130, 296, 260, 44, "BROKER", "synthesises, scores risk", cls="node lead"))
     o.append(_arrow(cx, 340, cx, 364))

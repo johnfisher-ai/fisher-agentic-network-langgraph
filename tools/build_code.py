@@ -71,10 +71,8 @@ def build():
 
     <div class="note">
       <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
-      Every <code>response</code> element you see below is canned text, not a call. That keeps
-      the demo deterministic and nearly free to run, and it means the seam where a real
-      integration would attach is a single method,
-      <code>Agent.reply_for</code>.</p>
+      Every <code>response</code> element below is text somebody typed, not a call.</p>
+      <p>{page.WHY}</p>
     </div>
 
     <div class="scroll">
@@ -90,7 +88,7 @@ def build():
   <section>
     <h2>What a config declares</h2>
     <p>Four things: the prompt the broker routes with, the prompt it synthesises and scores risk
-    with, the scenarios that select which fixture each agent returns, and the agents
+    with, the scenarios that select which reply each agent returns, and the agents
     themselves.</p>
 
     {hl.wrap(excerpt.xml_element("config/config_travel.xml", "agent", "id", "revenue_strategist"),
@@ -98,7 +96,7 @@ def build():
 
     <p>The <code>description</code> is the only thing the broker sees when it decides who to
     consult, so it is doing real work despite being three words. Each
-    <code>response</code> is the fixture that agent returns for one scenario, and
+    <code>response</code> is the reply that agent gives for one scenario, and
     <code>default</code> covers anything unmatched.</p>
 
     <p>Scenarios are keyword lists. A question is tested against them in document order and the
@@ -124,7 +122,7 @@ def build():
               <td>{"<br>".join(a.name for a in AGENCY.agents.values())}</td></tr>
           <tr><td class="item">Scenarios</td>
               <td>{len(TRAVEL.scenarios)}</td><td>{len(AGENCY.scenarios)}</td></tr>
-          <tr><td class="item">Fixtures</td>
+          <tr><td class="item">Canned replies</td>
               <td>{sum(len(a.replies) for a in TRAVEL.agents.values())}</td>
               <td>{sum(len(a.replies) for a in AGENCY.agents.values())}</td></tr>
           <tr><td class="item">Lines of Python that differ</td>

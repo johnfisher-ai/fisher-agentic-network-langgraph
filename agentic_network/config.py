@@ -24,9 +24,10 @@ class Agent:
     replies: dict[int, str] = field(default_factory=dict)
 
     def reply_for(self, scenario_id: int) -> str:
-        """The fixture this agent returns for a scenario.
+        """The canned reply this agent gives for a scenario.
 
-        Every reply is canned. No agent calls a real API; see the project README.
+        Every reply is written into the config in advance. No agent calls a real
+        API, so no live business data passes through this network.
         """
         return self.replies.get(scenario_id, self.default_reply)
 

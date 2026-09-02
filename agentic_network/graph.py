@@ -4,7 +4,7 @@ Shape of a run:
 
     user question
         -> broker            decides which specialists to consult
-        -> specialists       fan out in parallel, each returns its fixture
+        -> specialists       fan out in parallel, each returns its canned reply
         -> broker            synthesises one answer and scores its risk
         -> human_approval    only when the risk score says so
         -> END

@@ -102,9 +102,8 @@ def build():
       <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
       The design notes name candidate integrations, rate-shopping feeds, property management
       systems, flight capacity data; none of them are built.</p>
-      <p>That is deliberate. Canned agent replies keep the demo deterministic and nearly free to
-      run, so the orchestration is the thing under examination rather than five integrations.
-      This is a study of a pattern, not a product, and nothing here evidences a business
+      <p>{page.WHY}</p>
+      <p>This is a study of a pattern, not a product, and nothing here evidences a business
       outcome.</p>
     </div>
   </section>
@@ -121,8 +120,8 @@ def build():
       <div class="figbox">{d}</div>
       <figcaption>Figure 1. The broker fans out to the specialists it selected, fans back in, and
       routes to a human only when its own risk rule fires. Two calls to the model per question,
-      one to route and one to synthesise; the specialists cost nothing because their answers are
-      fixtures.</figcaption>
+      one to route and one to synthesise; the specialists cost nothing, because their answers were
+      written in advance.</figcaption>
     </figure>
   </section>
 

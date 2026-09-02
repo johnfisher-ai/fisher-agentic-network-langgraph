@@ -46,11 +46,12 @@
     the difference.</p>
 
     <div class="note">
-      <p><strong>What is real, and what is not.</strong> The orchestration runs: the LangGraph state machine, the routing, the synthesis and the human gate all execute against <code>gpt-4o</code>. <strong>Every agent response is a fixture read from the XML.</strong> No vendor API is called, and no MCP server exists.
+      <p><strong>What is real, and what is not.</strong> The orchestration runs: the LangGraph state machine, the routing, the synthesis and the human gate all execute against <code>gpt-4o</code>. <strong>Every agent's answer is written into the config file in advance</strong>, in its <code>&lt;mock_data&gt;</code> block. Nothing is fetched: no vendor API is called, and no MCP server exists.
       Every specialist node on this page does one thing: it looks up a string in the config and
       returns it. The seam where a live integration would attach is
-      <a href="#fixtures"><code>Agent.reply_for</code></a>, and nothing above it, not the graph,
+      <a href="#answers"><code>Agent.reply_for</code></a>, and nothing above it, not the graph,
       not the routing, not the gate, would need to change.</p>
+      <p>That is a data-protection decision before it is a convenience one. Wired to live systems, a network like this would read real rates, booking records and guest reviews, and forward whatever it found to a language model. With every answer written in advance, the only things that leave your machine are the question you type and text you can read in this repository. It also makes a run repeatable, which is what lets the test suite exercise the real graph with no key, no network and nothing spent.</p>
     </div>
   </section>
 
@@ -81,8 +82,8 @@
   <section>
     <h2>Nodes are generated, not written</h2>
     <p>Each agent in the config becomes a node through a closure that captures its own
-    definition. The node itself does almost nothing: it looks up the fixture for the current
-    scenario and returns it under the agent's name.</p>
+    definition. The node itself does almost nothing: it looks up the canned reply for the
+    current scenario and returns it under the agent's name.</p>
 
     <pre class="code"><span class="sas-k">def</span> specialist(agent_id: <span class="sas-p">str</span>):
     agent = config.agents[agent_id]
@@ -158,7 +159,7 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
 
   <section>
     <h2>Scenario selection</h2>
-    <p>Which fixture an agent returns depends on the scenario, matched by keyword against the
+    <p>Which canned reply an agent returns depends on the scenario, matched by keyword against the
     question. It is the least clever part of the system and the place where
     imprecision is hardest to notice.</p>
 
@@ -262,11 +263,11 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
     gate, so the test suite asserts that the proposal text survives verbatim into the final
     output, and that synthesis runs exactly once.</p>
 
-  <section id="fixtures">
-    <h2>Where the fixtures sit</h2>
+  <section id="answers">
+    <h2>Where the canned answers sit</h2>
     <p>Each agent carries a default reply and one per scenario. The node returns a string; it
-    never parses it. The model receives the fixtures as text and does the interpreting, which is
-    why a fixture can be JSON-shaped without being contractually JSON.</p>
+    never parses it. The model receives these as text and does the interpreting, which is
+    why a reply can be JSON-shaped without being contractually JSON.</p>
 
     <pre class="code"><span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;market_scout&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Market Scout&quot;</span><span class="sas-k">&gt;</span>
     <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>events, weather<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
@@ -284,9 +285,10 @@ graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
     something else. Nothing above it changes: not the graph, not the routing, not the gate.</p>
 
     <pre class="code"><span class="sas-k">def</span> reply_for(<span class="sas-p">self</span>, scenario_id: <span class="sas-p">int</span>) -&gt; <span class="sas-p">str</span>:
-    <span class="sas-s">&quot;&quot;&quot;The fixture this agent returns for a scenario.
+    <span class="sas-s">&quot;&quot;&quot;The canned reply this agent gives for a scenario.
 
-    Every reply is canned. No agent calls a real API; see the project README.
+    Every reply is written into the config in advance. No agent calls a real
+    API, so no live business data passes through this network.
     &quot;&quot;&quot;</span>
     <span class="sas-k">return</span> <span class="sas-p">self</span>.replies.get(scenario_id, <span class="sas-p">self</span>.default_reply)</pre>
   </section>

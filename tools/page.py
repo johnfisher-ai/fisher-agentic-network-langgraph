@@ -11,8 +11,16 @@ SITE = "https://johnfisher-ai.github.io/fisher-agentic-network-langgraph"
 REPO = "https://github.com/johnfisher-ai/fisher-agentic-network-langgraph"
 FIXTURES = ("The orchestration runs: the LangGraph state machine, the routing, the synthesis "
             "and the human gate all execute against <code>gpt-4o</code>. "
-            "<strong>Every agent response is a fixture read from the XML.</strong> "
-            "No vendor API is called, and no MCP server exists.")
+            "<strong>Every agent's answer is written into the config file in advance</strong>, "
+            "in its <code>&lt;mock_data&gt;</code> block. Nothing is fetched: no vendor API is "
+            "called, and no MCP server exists.")
+
+WHY = ("That is a data-protection decision before it is a convenience one. Wired to live "
+       "systems, a network like this would read real rates, booking records and guest reviews, "
+       "and forward whatever it found to a language model. With every answer written in "
+       "advance, the only things that leave your machine are the question you type and text you "
+       "can read in this repository. It also makes a run repeatable, which is what lets the "
+       "test suite exercise the real graph with no key, no network and nothing spent.")
 
 COLAB = ("https://colab.research.google.com/github/johnfisher-ai/"
          "fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb")

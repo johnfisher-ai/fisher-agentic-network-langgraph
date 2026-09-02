@@ -56,8 +56,9 @@ def build():
       <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
       Every specialist node on this page does one thing: it looks up a string in the config and
       returns it. The seam where a live integration would attach is
-      <a href="#fixtures"><code>Agent.reply_for</code></a>, and nothing above it, not the graph,
+      <a href="#answers"><code>Agent.reply_for</code></a>, and nothing above it, not the graph,
       not the routing, not the gate, would need to change.</p>
+      <p>{page.WHY}</p>
     </div>
   </section>
 
@@ -79,8 +80,8 @@ def build():
   <section>
     <h2>Nodes are generated, not written</h2>
     <p>Each agent in the config becomes a node through a closure that captures its own
-    definition. The node itself does almost nothing: it looks up the fixture for the current
-    scenario and returns it under the agent's name.</p>
+    definition. The node itself does almost nothing: it looks up the canned reply for the
+    current scenario and returns it under the agent's name.</p>
 
     {py(excerpt.named("agentic_network/graph.py", "build_network", inner="specialist"))}
 
@@ -117,7 +118,7 @@ def build():
 
   <section>
     <h2>Scenario selection</h2>
-    <p>Which fixture an agent returns depends on the scenario, matched by keyword against the
+    <p>Which canned reply an agent returns depends on the scenario, matched by keyword against the
     question. It is the least clever part of the system and the place where
     imprecision is hardest to notice.</p>
 
@@ -174,11 +175,11 @@ def build():
     gate, so the test suite asserts that the proposal text survives verbatim into the final
     output, and that synthesis runs exactly once.</p>
 
-  <section id="fixtures">
-    <h2>Where the fixtures sit</h2>
+  <section id="answers">
+    <h2>Where the canned answers sit</h2>
     <p>Each agent carries a default reply and one per scenario. The node returns a string; it
-    never parses it. The model receives the fixtures as text and does the interpreting, which is
-    why a fixture can be JSON-shaped without being contractually JSON.</p>
+    never parses it. The model receives these as text and does the interpreting, which is
+    why a reply can be JSON-shaped without being contractually JSON.</p>
 
     {xm(excerpt.xml_element("config/config_travel.xml", "agent", "id", "market_scout"))}
 
