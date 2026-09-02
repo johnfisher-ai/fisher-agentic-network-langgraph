@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture · A Config-Driven Agent Network</title>
+<meta name="description" content="How the LangGraph state machine is built from an XML config: shared state with a reducer, nodes generated at load time, and a terminal human approval gate.">
+<link rel="canonical" href="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/architecture.html">
+<meta name="author" content="John Fisher">
+<meta name="theme-color" content="#2f5d94">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="A Config-Driven Agent Network">
+<meta property="og:title" content="Architecture of a config-driven agent network">
+<meta property="og:description" content="Shared state with a reducer for parallel writes, nodes generated from config at load time, an output channel that keeps the graph front-end agnostic, and a human gate that returns exactly what was approved.">
+<meta property="og:url" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/architecture.html">
+<meta property="og:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="A broker agent fanning out to five specialist agents, with a human approval gate on the risky path.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Architecture of a config-driven agent network">
+<meta name="twitter:description" content="Shared state with a reducer for parallel writes, nodes generated from config at load time, an output channel that keeps the graph front-end agnostic, and a human gate that returns exactly what was approved.">
+<meta name="twitter:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="kicker">How it is put together</p>
+    <h1>Architecture</h1>
+    <p class="byline">The state machine, the dynamic construction, and the gate.</p>
+  </div>
+</header>
+
+<nav class="site"><div class="wrap"><a href="./">Overview</a><a href="architecture.html" aria-current="page">Architecture</a><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a></div></nav>
+
+<main>
+<div class="wrap">
+
+  <section>
+    <p class="lede">The interesting constraint in this project is that the roster is not known
+    when the code is written. There is no class per agent and no branch per destination. The
+    graph is assembled at load time from whatever the config declares, which means the same
+    module compiles a five-agent travel network or a five-agent consulting firm without knowing
+    the difference.</p>
+  </section>
+
+  <section>
+    <h2>Shared state, and why it needs a reducer</h2>
+    <p>Every node reads and writes one state object. Most of its fields are ordinary, written by
+    one node at a time. <code>agent_outputs</code> is not: the specialists run in parallel and
+    all write to it at once, so LangGraph needs to be told how to combine their writes.</p>
+
+    <pre class="code"><span class="sas-k">def</span> _merge(left: <span class="sas-p">dict</span> | <span class="sas-k">None</span>, right: <span class="sas-p">dict</span> | <span class="sas-k">None</span>) -&gt; <span class="sas-p">dict</span>:
+    <span class="sas-s">&quot;&quot;&quot;Reducer letting parallel agent nodes write into one dict without clobbering.&quot;&quot;&quot;</span>
+    <span class="sas-k">return</span> {**(left <span class="sas-k">or</span> {}), **(right <span class="sas-k">or</span> {})}</pre>
+    <pre class="code"><span class="sas-k">class</span> AgentState(TypedDict, total=<span class="sas-k">False</span>):
+    input: <span class="sas-p">str</span>
+    scenario_id: <span class="sas-p">int</span>
+    broker_plan: <span class="sas-p">list</span>[<span class="sas-p">str</span>]
+    agent_outputs: Annotated[<span class="sas-p">dict</span>[<span class="sas-p">str</span>, <span class="sas-p">str</span>], _merge]
+    final_response: <span class="sas-p">str</span>
+    requires_approval: <span class="sas-p">bool</span>
+    approval_decision: <span class="sas-p">str</span></pre>
+
+    <p>The <code>Annotated</code> wrapper attaches the reducer to that one field. Without it,
+    parallel writes to the same key are a conflict, and with a naive reducer the specialists
+    would overwrite each other and the broker would synthesise from whichever happened to
+    finish last.</p>
+  </section>
+
+  <section>
+    <h2>Nodes are generated, not written</h2>
+    <p>Each agent in the config becomes a node through a closure that captures its own
+    definition. The node itself does almost nothing: it looks up the fixture for the current
+    scenario and returns it under the agent's name.</p>
+
+    <pre class="code"><span class="sas-k">def</span> specialist(agent_id: <span class="sas-p">str</span>):
+    agent = config.agents[agent_id]
+
+    <span class="sas-k">def</span> node(state: AgentState) -&gt; <span class="sas-p">dict</span>:
+        reply = agent.reply_for(state[<span class="sas-s">&quot;scenario_id&quot;</span>])
+        channel.status(<span class="sas-s">f&quot;Consulting {agent.name} ...&quot;</span>)
+        channel.log(<span class="sas-s">f&quot;{agent.name} returned: {reply}&quot;</span>)
+        <span class="sas-k">return</span> {<span class="sas-s">&quot;agent_outputs&quot;</span>: {agent.name: reply}}
+
+    <span class="sas-k">return</span> node</pre>
+
+    <p>The edges are wired the same way, in a loop over the roster. The conditional edge out of
+    the broker has to declare every possible destination up front, which is the one place the
+    roster has to be enumerated.</p>
+
+    <pre class="code">graph.set_entry_point(<span class="sas-s">&quot;broker&quot;</span>)
+graph.add_conditional_edges(
+    <span class="sas-s">&quot;broker&quot;</span>, route, <span class="sas-p">list</span>(config.agents) + [<span class="sas-s">&quot;human_approval&quot;</span>, END]
+)
+<span class="sas-k">for</span> agent_id <span class="sas-k">in</span> config.agents:
+    graph.add_edge(agent_id, <span class="sas-s">&quot;broker&quot;</span>)
+<span class="sas-c"># The gate is terminal. Going back to the broker would re-synthesise.</span>
+graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)</pre>
+
+    <figure>
+      <div class="figbox"><svg class="fig diagram" viewBox="0 0 780 450" role="img" aria-label="The graph as it is compiled. Node names are the agent ids from the config. Nothing here is written by hand."><defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahead" d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><text class="ttl" x="0" y="16">The graph as it is compiled</text><text class="sub" x="0" y="33">Node names are the agent ids from the config. Nothing here is written by hand.</text><text class="ax" x="390.0" y="58" text-anchor="middle">set_entry_point</text><line class="flow" x1="390.0" y1="64" x2="390.0" y2="84" marker-end="url(#ah3)"/><rect class="node lead" x="300.0" y="84" width="180" height="34" rx="8"/><text class="lab bold" x="390.0" y="105.0" text-anchor="middle">broker</text><line class="flow" x1="390.0" y1="118" x2="110.0" y2="176" marker-end="url(#ah3)" stroke-dasharray="5 3"/><rect class="node" x="44.0" y="178" width="132" height="30" rx="8"/><text class="lab bold" x="110.0" y="197.0" text-anchor="middle">market_scout</text><path class="flow" d="M 110.0 208 L 110.0 226 L 390.0 226 L 390.0 118" marker-end="url(#ah3)"/><line class="flow" x1="390.0" y1="118" x2="250.0" y2="176" marker-end="url(#ah3)" stroke-dasharray="5 3"/><rect class="node" x="184.0" y="178" width="132" height="30" rx="8"/><text class="lab bold" x="250.0" y="197.0" text-anchor="middle">revenue_strategist</text><path class="flow" d="M 250.0 208 L 250.0 226 L 390.0 226 L 390.0 118" marker-end="url(#ah3)"/><line class="flow" x1="390.0" y1="118" x2="390.0" y2="176" marker-end="url(#ah3)" stroke-dasharray="5 3"/><rect class="node" x="324.0" y="178" width="132" height="30" rx="8"/><text class="lab bold" x="390.0" y="197.0" text-anchor="middle">content_specialist</text><path class="flow" d="M 390.0 208 L 390.0 226 L 390.0 226 L 390.0 118" marker-end="url(#ah3)"/><line class="flow" x1="390.0" y1="118" x2="530.0" y2="176" marker-end="url(#ah3)" stroke-dasharray="5 3"/><rect class="node" x="464.0" y="178" width="132" height="30" rx="8"/><text class="lab bold" x="530.0" y="197.0" text-anchor="middle">guest_experience</text><path class="flow" d="M 530.0 208 L 530.0 226 L 390.0 226 L 390.0 118" marker-end="url(#ah3)"/><line class="flow" x1="390.0" y1="118" x2="670.0" y2="176" marker-end="url(#ah3)" stroke-dasharray="5 3"/><rect class="node" x="604.0" y="178" width="132" height="30" rx="8"/><text class="lab bold" x="670.0" y="197.0" text-anchor="middle">facilities_manager</text><path class="flow" d="M 670.0 208 L 670.0 226 L 390.0 226 L 390.0 118" marker-end="url(#ah3)"/><text class="ax" x="390.0" y="152" text-anchor="middle">add_conditional_edges, dashed: the router returns a list of node names</text><text class="ax" x="390.0" y="252" text-anchor="middle">add_edge(agent, "broker"), solid: every specialist reports back</text><path class="flow" d="M 300.0 101 L 52 101 L 52 316 L 118 316" marker-end="url(#ah3)"/><rect class="node gate" x="120" y="300" width="160" height="32" rx="8"/><text class="lab bold" x="200.0" y="320.0" text-anchor="middle">human_approval</text><line class="flow" x1="200" y1="332" x2="200" y2="364" marker-end="url(#ah3)"/><rect class="node soft" x="140" y="366" width="120" height="30" rx="8"/><text class="lab bold" x="200.0" y="385.0" text-anchor="middle">END</text><path class="flow" d="M 480.0 101 L 728 101 L 728 381 L 622 381" marker-end="url(#ah3)"/><rect class="node soft" x="500" y="366" width="120" height="30" rx="8"/><text class="lab bold" x="560.0" y="385.0" text-anchor="middle">END</text><text class="ax" x="200" y="424" text-anchor="middle">the gate is terminal, it never returns to the broker</text><text class="ax" x="560" y="424" text-anchor="middle">low-risk answers end here</text></svg></div>
+      <figcaption>Figure 1. The compiled graph for <code>config_travel.xml</code>. The node
+      names are the agent ids from the XML. Dashed edges are conditional, chosen by the router
+      at run time; solid edges are unconditional.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Routing, and admitting when it fails</h2>
+    <p>The broker asks the model which specialists to consult and expects a JSON list of agent
+    ids back. Models do not always oblige. The original wrapped that parse in a bare
+    <code>except</code>, which meant a malformed reply silently became a decision to consult the
+    first agent, indistinguishable from a real routing choice.</p>
+
+    <pre class="code"><span class="sas-k">def</span> _parse_plan(raw: <span class="sas-p">str</span>, config: NetworkConfig, channel: Channel) -&gt; <span class="sas-p">list</span>[<span class="sas-p">str</span>]:
+    <span class="sas-s">&quot;&quot;&quot;Read the router&#x27;s JSON list of agent ids, and say so when it is malformed.
+
+    The original swallowed every exception here and silently fell back to the
+    first agent, so a broken reply was indistinguishable from a real decision.
+    &quot;&quot;&quot;</span>
+    cleaned = raw.replace(<span class="sas-s">&quot;```json&quot;</span>, <span class="sas-s">&quot;&quot;</span>).replace(<span class="sas-s">&quot;```&quot;</span>, <span class="sas-s">&quot;&quot;</span>).strip()
+    fallback = [<span class="sas-p">next</span>(<span class="sas-p">iter</span>(config.agents))]
+    <span class="sas-k">try</span>:
+        plan = json.loads(cleaned)
+    <span class="sas-k">except</span> json.JSONDecodeError <span class="sas-k">as</span> exc:
+        channel.log(<span class="sas-s">f&quot;router returned unparseable JSON ({exc}); falling back. Raw: {raw!r}&quot;</span>)
+        <span class="sas-k">return</span> fallback
+
+    <span class="sas-k">if</span> <span class="sas-k">not</span> <span class="sas-p">isinstance</span>(plan, <span class="sas-p">list</span>):
+        channel.log(<span class="sas-s">f&quot;router returned {type(plan).__name__}, expected a list; falling back.&quot;</span>)
+        <span class="sas-k">return</span> fallback
+
+    known = [a <span class="sas-k">for</span> a <span class="sas-k">in</span> plan <span class="sas-k">if</span> a <span class="sas-k">in</span> config.agents]
+    <span class="sas-k">if</span> unknown := [a <span class="sas-k">for</span> a <span class="sas-k">in</span> plan <span class="sas-k">if</span> a <span class="sas-k">not</span> <span class="sas-k">in</span> config.agents]:
+        channel.log(<span class="sas-s">f&quot;router named agents that do not exist, ignoring: {unknown}&quot;</span>)
+    <span class="sas-k">if</span> <span class="sas-k">not</span> known:
+        channel.log(<span class="sas-s">&quot;router named no valid agents; falling back.&quot;</span>)
+        <span class="sas-k">return</span> fallback
+    <span class="sas-k">return</span> known</pre>
+
+    <p>It still falls back, because a demo that dies on a bad parse is worse than one that
+    degrades. The difference is that it now says so, and it separately reports agent names the
+    model invented, which is the failure that looks most like working software.</p>
+  </section>
+
+  <section>
+    <h2>Scenario selection</h2>
+    <p>Which fixture an agent returns depends on the scenario, matched by keyword against the
+    question. This is the least clever part of the system and it caused the most trouble.</p>
+
+    <pre class="code"><span class="sas-k">def</span> scenario_for(<span class="sas-p">self</span>, prompt: <span class="sas-p">str</span>) -&gt; <span class="sas-p">int</span>:
+    <span class="sas-s">&quot;&quot;&quot;Pick a scenario by keyword.
+
+    Keywords match on word boundaries with an optional plural, so &quot;crib&quot;
+    matches &quot;cribs&quot; but &quot;ai&quot; no longer matches &quot;retail&quot;, &quot;explain&quot; or &quot;email&quot;.
+    An earlier substring version of this routed those to the wrong scenario
+    silently. First match in document order wins, so order the scenarios from
+    most to least specific.
+    &quot;&quot;&quot;</span>
+    text = prompt.lower()
+    <span class="sas-k">for</span> sc <span class="sas-k">in</span> <span class="sas-p">self</span>.scenarios:
+        <span class="sas-k">for</span> kw <span class="sas-k">in</span> sc.keywords:
+            <span class="sas-k">if</span> re.search(<span class="sas-s">rf&quot;\b{re.escape(kw)}(?:s|es)?\b&quot;</span>, text):
+                <span class="sas-k">return</span> sc.id
+    <span class="sas-k">return</span> <span class="sas-p">self</span>.default_scenario</pre>
+
+    <p>The original matched substrings. Because the consulting config lists <code>ai</code> as a
+    keyword, any question containing <em>retail</em>, <em>explain</em>, <em>email</em>,
+    <em>available</em>, <em>maintain</em> or <em>campaign</em> was routed to the technology
+    disruption scenario. Nothing failed. The agents returned confident, well-formed answers
+    about the wrong situation.</p>
+  </section>
+
+  <section>
+    <h2>The graph does not know where its output goes</h2>
+    <p>The first version wired the desktop client to the graph through four module-level
+    globals, so the nodes had to know whether a GUI was attached. That made the graph
+    untestable and the CLI and GUI impossible to separate. Now the nodes talk to a channel.</p>
+
+    <pre class="code"><span class="sas-k">class</span> Channel:
+    <span class="sas-s">&quot;&quot;&quot;Interface between the running graph and whoever is watching it.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> status(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;One-line progress, meant to be overwritten by the next one.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> log(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;Detail for the trace log.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> chat(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;A message addressed to the user.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> ask_approval(<span class="sas-p">self</span>, proposal: <span class="sas-p">str</span>) -&gt; <span class="sas-p">bool</span>:
+        <span class="sas-s">&quot;&quot;&quot;Block until a human approves or rejects. Return True to proceed.&quot;&quot;&quot;</span>
+        <span class="sas-k">raise</span> <span class="sas-p">NotImplementedError</span></pre>
+
+    <p>Three implementations. <code>ConsoleChannel</code> prints and can answer the approval
+    gate automatically, which is what lets the notebook run unattended.
+    <code>QueueChannel</code> pushes messages onto a queue the desktop UI polls, and blocks the
+    worker thread on an <code>Event</code> until a person answers. A third, used by the tests,
+    records everything and never prints.</p>
+
+    <p>That indirection is what makes the tests possible. The suite runs the real graph with a
+    stub model and a recording channel: no API key, no network, no cost.</p>
+  </section>
+
+  <section id="gate">
+    <h2>The human gate, and how it was broken</h2>
+    <p>The synthesis prompt asks the model to score its own recommendation, and the config
+    supplies the rule. In the travel network, changing prices or publishing content needs a
+    person. In the consulting network it is layoffs, restructuring, or budget moves over $1M.
+    The broker sets <code>requires_approval</code> when the answer contains
+    <code>RISK: YES</code>, and the router sends it to the gate.</p>
+
+    <p>In the original, the gate had an edge back to the broker. That looks harmless. It is
+    not: the broker's first action is to check whether agent outputs exist, and they do, so it
+    <strong>re-ran synthesis</strong>. The user therefore received a second, independently
+    generated answer, not the one they had just approved.</p>
+
+    <p>The original notebook is still in the history, with its output. Across the six approval
+    runs recorded in it, the delivered text differed from the approved text in
+    <strong>three</strong>, and in <strong>one</strong> the risk verdict itself flipped: the
+    human approved a proposal marked <code>RISK: YES</code> and received an answer marked
+    <code>RISK: NO</code>. That run is in
+    <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/commit/30e9b14">commit 30e9b14</a>, cell 34.</p>
+
+    <p>The fix is to make the gate terminal and hand back exactly the text that was shown.</p>
+
+    <pre class="code"><span class="sas-k">def</span> human_approval(state: AgentState) -&gt; <span class="sas-p">dict</span>:
+    proposal = state[<span class="sas-s">&quot;final_response&quot;</span>]
+    channel.status(<span class="sas-s">&quot;Waiting for human approval ...&quot;</span>)
+    channel.log(<span class="sas-s">f&quot;proposal put to a human:\n{proposal}&quot;</span>)
+
+    <span class="sas-k">if</span> channel.ask_approval(proposal):
+        channel.log(<span class="sas-s">&quot;human approved&quot;</span>)
+        <span class="sas-c"># Deliver exactly the text that was approved. An earlier version routed</span>
+        <span class="sas-c"># back through the broker, which re-ran synthesis and returned different</span>
+        <span class="sas-c"># wording, and sometimes a different risk verdict, than the human saw.</span>
+        final = proposal + <span class="sas-s">&quot;\n\n[STATUS: APPROVED BY HUMAN, EXECUTED]&quot;</span>
+        channel.chat(final)
+        channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
+        <span class="sas-k">return</span> {<span class="sas-s">&quot;approval_decision&quot;</span>: <span class="sas-s">&quot;APPROVED&quot;</span>, <span class="sas-s">&quot;final_response&quot;</span>: final}
+
+    channel.log(<span class="sas-s">&quot;human rejected&quot;</span>)
+    final = <span class="sas-s">&quot;ACTION CANCELLED. The human operator rejected the proposal.\n\nWhat was proposed:\n&quot;</span> + proposal
+    channel.chat(final)
+    channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
+    <span class="sas-k">return</span> {<span class="sas-s">&quot;approval_decision&quot;</span>: <span class="sas-s">&quot;REJECTED&quot;</span>, <span class="sas-s">&quot;final_response&quot;</span>: final}</pre>
+
+    <p>An approval gate that regenerates its answer is not an approval gate. If you build one,
+    assert early that the approved text survives to the output, because nothing about the
+    behavior looks wrong from the outside: the system stops, a person says yes, and a
+    plausible answer appears.</p>
+  </section>
+
+  <section>
+    <h2>Where the fixtures sit</h2>
+    <p>Each agent carries a default reply and one per scenario. The node returns a string; it
+    never parses it. The model receives the fixtures as text and does the interpreting, which is
+    why a fixture can be JSON-shaped without being contractually JSON.</p>
+
+    <pre class="code"><span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;market_scout&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Market Scout&quot;</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>events, weather<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;No significant market alerts.&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;event&quot;</span>: <span class="sas-s">&quot;Tech Summit&quot;</span>, <span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;CANCELLED&quot;</span>, <span class="sas-s">&quot;impact&quot;</span>: <span class="sas-s">&quot;negative demand&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;alert&quot;</span>: <span class="sas-s">&quot;City Construction&quot;</span>, <span class="sas-s">&quot;location&quot;</span>: <span class="sas-s">&quot;Main St&quot;</span>, <span class="sas-s">&quot;duration&quot;</span>: <span class="sas-s">&quot;2 weeks&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;event&quot;</span>: <span class="sas-s">&quot;Taylor Swift Eras Tour&quot;</span>, <span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;NEW_ANNOUNCEMENT&quot;</span>, <span class="sas-s">&quot;impact&quot;</span>: <span class="sas-s">&quot;massive demand spike&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;demographic&quot;</span>: <span class="sas-s">&quot;Families&quot;</span>, <span class="sas-s">&quot;flight_capacity&quot;</span>: <span class="sas-s">&quot;+20%&quot;</span>, <span class="sas-s">&quot;origin&quot;</span>: <span class="sas-s">&quot;Domestic&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;market_status&quot;</span>: <span class="sas-s">&quot;stable&quot;</span>, <span class="sas-s">&quot;competitor_activity&quot;</span>: <span class="sas-s">&quot;aggressive discounting&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+<span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span></pre>
+
+    <p>This is the seam where a real integration would go. <code>reply_for</code> is the only
+    method a specialist node calls, so an agent backed by a live API is that one method doing
+    something else. Nothing above it changes: not the graph, not the routing, not the gate.</p>
+
+    <pre class="code"><span class="sas-k">def</span> reply_for(<span class="sas-p">self</span>, scenario_id: <span class="sas-p">int</span>) -&gt; <span class="sas-p">str</span>:
+    <span class="sas-s">&quot;&quot;&quot;The fixture this agent returns for a scenario.
+
+    Every reply is canned. No agent calls a real API; see the project README.
+    &quot;&quot;&quot;</span>
+    <span class="sas-k">return</span> <span class="sas-p">self</span>.replies.get(scenario_id, <span class="sas-p">self</span>.default_reply)</pre>
+  </section>
+
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Built by John Fisher. Code under the MIT license.
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a> ·
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Notebook</a></p>
+    <p class="sig">The orchestration runs. Every agent reply is a fixture: no vendor API is called.</p>
+  </div>
+</footer>
+
+</body>
+</html>

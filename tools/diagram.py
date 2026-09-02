@@ -102,3 +102,64 @@ def config_swap(title, subtitle, left, right):
              'agentic_network/graph.py, unchanged</text>')
     o.append("</svg>")
     return "".join(o)
+
+
+def state_machine(agent_ids, title, subtitle):
+    """The graph as LangGraph actually builds it: real node names and edge kinds."""
+    H = 450
+    cx = W / 2
+    o = [
+        f'<svg class="fig diagram" viewBox="0 0 {W} {H}" role="img" '
+        f'aria-label="{esc(title)}. {esc(subtitle)}">',
+        '<defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" '
+        'markerHeight="6" orient="auto-start-reverse">'
+        '<path class="ahead" d="M 0 0 L 10 5 L 0 10 z"/></marker></defs>',
+        f'<text class="ttl" x="0" y="16">{esc(title)}</text>',
+        f'<text class="sub" x="0" y="33">{esc(subtitle)}</text>',
+    ]
+
+    def arrow(x1, y1, x2, y2, dash=False):
+        d = ' stroke-dasharray="5 3"' if dash else ""
+        return (f'<line class="flow" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
+                f'marker-end="url(#ah3)"{d}/>')
+
+    def path(d, dash=False):
+        s = ' stroke-dasharray="5 3"' if dash else ""
+        return f'<path class="flow" d="{d}" marker-end="url(#ah3)"{s}/>'
+
+    o.append(f'<text class="ax" x="{cx}" y="58" text-anchor="middle">set_entry_point</text>')
+    o.append(arrow(cx, 64, cx, 84))
+    o.append(_box(cx - 90, 84, 180, 34, "broker", cls="node lead"))
+
+    n = len(agent_ids)
+    bw, gap = 132, 8
+    x0 = (W - (n * bw + (n - 1) * gap)) / 2
+    ay = 178
+    for i, aid in enumerate(agent_ids):
+        x = x0 + i * (bw + gap)
+        o.append(arrow(cx, 118, x + bw / 2, ay - 2, dash=True))
+        o.append(_box(x, ay, bw, 30, aid, cls="node"))
+        o.append(path(f'M {x + bw / 2} {ay + 30} L {x + bw / 2} {ay + 48} '
+                      f'L {cx} {ay + 48} L {cx} 118'))
+
+    o.append(f'<text class="ax" x="{cx}" y="152" text-anchor="middle">'
+             'add_conditional_edges, dashed: the router returns a list of node names</text>')
+    o.append(f'<text class="ax" x="{cx}" y="252" text-anchor="middle">'
+             'add_edge(agent, "broker"), solid: every specialist reports back</text>')
+
+    # Both terminal routes leave the broker sideways and travel outside the agent
+    # row, so neither line crosses a node box.
+    o.append(path(f'M {cx - 90} 101 L 52 101 L 52 316 L 118 316'))
+    o.append(_box(120, 300, 160, 32, "human_approval", cls="node gate"))
+    o.append(arrow(200, 332, 200, 364))
+    o.append(_box(140, 366, 120, 30, "END", cls="node soft"))
+
+    o.append(path(f'M {cx + 90} 101 L 728 101 L 728 381 L 622 381'))
+    o.append(_box(500, 366, 120, 30, "END", cls="node soft"))
+
+    o.append(f'<text class="ax" x="200" y="424" text-anchor="middle">'
+             'the gate is terminal, it never returns to the broker</text>')
+    o.append(f'<text class="ax" x="560" y="424" text-anchor="middle">'
+             'low-risk answers end here</text>')
+    o.append("</svg>")
+    return "".join(o)
