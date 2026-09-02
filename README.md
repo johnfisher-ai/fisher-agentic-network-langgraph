@@ -177,28 +177,6 @@ First match in document order wins, so order scenarios from most specific to lea
 
 ---
 
-## What building it corrected
-
-Turning the prototype into a package surfaced defects that had been invisible while everything
-sat in one cell. They are worth listing, because most of them failed silently.
-
-- **The human gate delivered different text than the human approved.** Approval routed back
-  through the broker, which re-ran synthesis, so the answer was a second generation that
-  sometimes carried a different risk verdict than the one shown for approval. In a system whose
-  whole purpose is authorising an action, the authorised text was not the delivered text. The
-  gate is now terminal and returns the proposal verbatim.
-- **Keywords matched as substrings**, so `ai` matched *retail*, *explain*, *email* and
-  *available*, routing those questions to the wrong scenario with no sign it had happened.
-- **A bare `except:`** around the router's JSON parse made a malformed reply indistinguishable
-  from a real routing decision.
-- **Two fixtures had duplicate JSON keys**, so one value in each was silently unreachable.
-- **The notebook opened a GUI window and blocked**, because `__name__` really is `"__main__"`
-  inside a notebook, and it failed outright in Colab, which has no display.
-
-Each is covered by a test.
-
----
-
 ## Built with
 
 Python 3.14, `langgraph` 1.0.10, `langchain` 1.2.10, `langchain-openai` 1.1.11, `gpt-4o`,
