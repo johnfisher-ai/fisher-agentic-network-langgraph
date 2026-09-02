@@ -96,3 +96,24 @@ def block(src: str, lang: str = "python") -> str:
     """A complete <pre class="code"> block."""
     fn = {"python": python, "xml": xml}[lang]
     return f'<pre class="code">{fn(src.strip())}</pre>'
+
+
+def wrap(src: str, lang: str = "python", *, name: str = "", note: str = "",
+         clip: bool = False) -> str:
+    """A titled code panel: filename on the left, a note on the right."""
+    fn = {"python": python, "xml": xml}[lang]
+    head = ""
+    if name or note:
+        left = f"<code>{html.escape(name)}</code>" if name else ""
+        right = f"<span>{html.escape(note)}</span>" if note else ""
+        head = f'<div class="head">{left}{right}</div>'
+    cls = "code clip" if clip else "code"
+    return f'<div class="codewrap">{head}<pre class="{cls}">{fn(src.strip())}</pre></div>'
+
+
+def collapsed(summary: str, src: str, lang: str = "python", *, name: str = "",
+              note: str = "") -> str:
+    """The same panel, behind a disclosure triangle. For whole files."""
+    inner = wrap(src, lang, name=name, note=note, clip=True)
+    return (f'<details class="src"><summary>{html.escape(summary)}</summary>'
+            f'{inner}</details>')

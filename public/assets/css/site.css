@@ -210,3 +210,10 @@ svg.diagram .gate   { fill:var(--panel); stroke:var(--s2); stroke-width:2.5; }
 svg.diagram .flow   { stroke:var(--fig-axis); stroke-width:1.5; fill:none; }
 svg.diagram .ahead  { fill:var(--fig-axis); stroke:none; }
 svg.diagram text    { paint-order:stroke; }
+
+/* ---- two-column comparison, stacks on narrow screens ------------------ */
+.side { display:grid; grid-template-columns:repeat(auto-fit,minmax(20rem,1fr)); gap:1rem;
+        margin:1rem 0; }
+.side > * { margin:0; min-width:0; }
+.side pre.code { font-size:.72rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+.side pre.code { min-width:0; }

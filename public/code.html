@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The code · A Config-Driven Agent Network</title>
+<meta name="description" content="The package, the config format, and the two XML files that turn one LangGraph state machine into a travel partner network or a consulting firm.">
+<link rel="canonical" href="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/code.html">
+<meta name="author" content="John Fisher">
+<meta name="theme-color" content="#2f5d94">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="A Config-Driven Agent Network">
+<meta property="og:title" content="The code behind a config-driven agent network">
+<meta property="og:description" content="Six Python modules and two XML files. The Python never changes between domains; the XML is the whole difference.">
+<meta property="og:url" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/code.html">
+<meta property="og:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="A broker agent fanning out to five specialist agents, with a human approval gate on the risky path.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The code behind a config-driven agent network">
+<meta name="twitter:description" content="Six Python modules and two XML files. The Python never changes between domains; the XML is the whole difference.">
+<meta name="twitter:image" content="https://johnfisher-ai.github.io/fisher-agentic-network-langgraph/assets/img/social-card.png">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="kicker">Every file, and what it does</p>
+    <h1>The code</h1>
+    <p class="byline">Python and XML, with the two configurations set against each other.</p>
+  </div>
+</header>
+
+<nav class="site"><div class="wrap"><a href="./">Overview</a><a href="architecture.html">Architecture</a><a href="code.html" aria-current="page">The code</a><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a></div></nav>
+
+<main>
+<div class="wrap">
+
+  <section>
+    <p class="lede">The project is small on purpose. Six Python modules hold the machinery, and
+    two XML files hold everything that makes one network different from another. The Python
+    does not know which domain it is running.</p>
+
+    <div class="scroll">
+      <table class="stats">
+        <thead><tr><th>File</th><th class="num">Lines</th><th>What it does</th></tr></thead>
+        <tbody><tr><td class="item"><code>agentic_network/config.py</code></td><td class="num">119</td><td>Parses a config into dataclasses and picks a scenario.</td></tr><tr><td class="item"><code>agentic_network/graph.py</code></td><td class="num">197</td><td>Builds and compiles the state machine. The core.</td></tr><tr><td class="item"><code>agentic_network/channels.py</code></td><td class="num">108</td><td>Where output goes and where human answers come from.</td></tr><tr><td class="item"><code>agentic_network/cli.py</code></td><td class="num">67</td><td>Headless entry point. What the notebook and Colab use.</td></tr><tr><td class="item"><code>agentic_network/gui.py</code></td><td class="num">204</td><td>The tkinter desktop client.</td></tr><tr><td class="item"><code>agentic_network/__init__.py</code></td><td class="num">22</td><td>The public surface: three names.</td></tr><tr><td class="item"><code>tests/test_network.py</code></td><td class="num">112</td><td>Nineteen checks against a stub model. No key needed.</td></tr><tr><td class="item"><code>config/config_travel.xml</code></td><td class="num">105</td><td>The travel partner network.</td></tr><tr><td class="item"><code>config/config_agency.xml</code></td><td class="num">114</td><td>The consulting firm.</td></tr></tbody>
+        <tfoot><tr><td class="item"><strong>Total</strong></td>
+          <td class="num"><strong>1048</strong></td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What a config declares</h2>
+    <p>Four things: the prompt the broker routes with, the prompt it synthesises and scores risk
+    with, the scenarios that select which fixture each agent returns, and the agents
+    themselves.</p>
+
+    <div class="codewrap"><div class="head"><code>config/config_travel.xml</code><span>one agent</span></div><pre class="code"><span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;revenue_strategist&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Revenue Strategist&quot;</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>pricing, rates<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Rates are optimal.&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;your_rate&quot;</span>: 250, <span class="sas-s">&quot;comp_rate&quot;</span>: 200, <span class="sas-s">&quot;variance&quot;</span>: <span class="sas-s">&quot;Drop rate by $50&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Drop Rate&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;occupancy&quot;</span>: <span class="sas-s">&quot;dropping&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Offer 15% Discount&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;your_rate&quot;</span>: 200, <span class="sas-s">&quot;market_demand&quot;</span>: <span class="sas-s">&quot;surge&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Raise Rate to $350&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;opportunity&quot;</span>: <span class="sas-s">&quot;Multi-room bookings&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Create Family Package&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;alert&quot;</span>: <span class="sas-s">&quot;Price War&quot;</span>, <span class="sas-s">&quot;comp_move&quot;</span>: <span class="sas-s">&quot;-$30 drop&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Match competitor rate or add value&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+<span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span></pre></div>
+
+    <p>The <code>description</code> is the only thing the broker sees when it decides who to
+    consult, so it is doing real work despite being three words. Each
+    <code>response</code> is the fixture that agent returns for one scenario, and
+    <code>default</code> covers anything unmatched.</p>
+
+    <p>Scenarios are keyword lists. A question is tested against them in document order and the
+    first hit wins, so the most specific scenario goes first.</p>
+
+    <div class="codewrap"><div class="head"><code>config/config_travel.xml</code><span>all five scenarios</span></div><pre class="code"><span class="sas-k">&lt;scenarios</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;1&quot;</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;true&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>november<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>bookings<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>construction<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>noise<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>concert<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>swift<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>demand<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>families<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>family<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>crib<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>price<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>competitor<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+<span class="sas-k">&lt;/scenarios</span><span class="sas-k">&gt;</span></pre></div>
+  </section>
+
+  <section>
+    <h2>Two configurations</h2>
+    <p>Here is the whole difference between an online travel agency and a management consulting
+    firm, as far as this codebase is concerned.</p>
+
+    <div class="scroll">
+      <table class="stats">
+        <thead><tr><th></th><th>config_travel.xml</th><th>config_agency.xml</th></tr></thead>
+        <tbody>
+          <tr><td class="item">Agents</td>
+              <td>5</td><td>5</td></tr>
+          <tr><td class="item">Roster</td>
+              <td>Market Scout<br>Revenue Strategist<br>Content Specialist<br>Guest Experience<br>Facilities Manager</td>
+              <td>Market Intelligence Analyst<br>Financial Modeler<br>Organizational Strategist<br>Operations Specialist<br>Risk & Compliance Officer</td></tr>
+          <tr><td class="item">Scenarios</td>
+              <td>5</td><td>5</td></tr>
+          <tr><td class="item">Fixtures</td>
+              <td>25</td>
+              <td>25</td></tr>
+          <tr><td class="item">Lines of Python that differ</td>
+              <td colspan="2"><strong>0</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The routing prompt</h3>
+    <p>The travel network gives the model almost nothing. The consulting network gives it a
+    role, which changes how it reads an ambiguous question.</p>
+    <div class="side">
+      <div class="codewrap"><div class="head"><code>travel</code></div><pre class="code">You are a Router. Select agents based on the user request.
+Available Agents: 
+{agent_list}
+
+Return ONLY a JSON list, e.g. [<span class="sas-s">&quot;market_scout&quot;</span>, <span class="sas-s">&quot;revenue_strategist&quot;</span>]</pre></div>
+      <div class="codewrap"><div class="head"><code>agency</code></div><pre class="code">You are an Engagement Manager at a top-tier management consulting firm. Select the appropriate specialized agents to consult based on the user&#x27;s request.
+Available Agents: 
+{agent_list}
+
+Return ONLY a JSON list of agent IDs, e.g. [<span class="sas-s">&quot;market_analyst&quot;</span>, <span class="sas-s">&quot;financial_modeler&quot;</span>]</pre></div>
+    </div>
+
+    <h3>The risk rule</h3>
+    <p>This is the one that matters most, because it decides when a person is interrupted. It is
+    prose in a prompt, not a policy engine, and the model is asked to apply it to its own
+    recommendation.</p>
+    <div class="side">
+      <div class="codewrap"><div class="head"><code>travel</code></div><pre class="code">User Request: {user_input}
+Agent Data: {agent_data}
+
+Task: 
+1. Answer the user&#x27;s request using the data.
+2. DETERMINE RISK: 
+   - If the recommendation suggests changing PRICES or publishing CONTENT, output <span class="sas-s">&quot;RISK: YES&quot;</span>.
+   - If the recommendation is just analysis, reporting, or checking status, output <span class="sas-s">&quot;RISK: NO&quot;</span>.</pre></div>
+      <div class="codewrap"><div class="head"><code>agency</code></div><pre class="code">User Request: {user_input}
+Agent Data: {agent_data}
+
+Task: 
+1. Synthesize the agents&#x27; findings into a cohesive, executive-level consulting recommendation for the client.
+2. DETERMINE RISK: 
+   - If the recommendation suggests LAYOFFS/REDUNDANCIES, BUDGET REALLOCATIONS over $1M, or MAJOR RESTRUCTURING, output <span class="sas-s">&quot;RISK: YES&quot;</span>.
+   - If the recommendation is pure market research, risk assessment, or process mapping, output <span class="sas-s">&quot;RISK: NO&quot;</span>.</pre></div>
+    </div>
+
+    <p>Prices and published content in one; layoffs, restructuring and budget moves over $1M in
+    the other. Same gate, same graph, same code path.</p>
+  </section>
+
+  <section>
+    <h2>The whole thing</h2>
+    <p>Both configs and the module that turns them into a graph, in full.</p>
+
+    <details class="src"><summary>config/config_travel.xml, 105 lines</summary><div class="codewrap"><div class="head"><code>config/config_travel.xml</code></div><pre class="code clip"><span class="sas-c">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="sas-k">&lt;system_config</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;prompts</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;router_prompt</span><span class="sas-k">&gt;</span>
+<span class="sas-s">&lt;![CDATA[You are a Router. Select agents based on the user request.
+Available Agents: 
+{agent_list}
+
+Return ONLY a JSON list, e.g. [&quot;market_scout&quot;, &quot;revenue_strategist&quot;]]]&gt;</span>
+        <span class="sas-k">&lt;/router_prompt</span><span class="sas-k">&gt;</span>
+        
+        <span class="sas-k">&lt;synthesis_prompt</span><span class="sas-k">&gt;</span>
+<span class="sas-s">&lt;![CDATA[User Request: {user_input}
+Agent Data: {agent_data}
+
+Task: 
+1. Answer the user&#x27;s request using the data.
+2. DETERMINE RISK: 
+   - If the recommendation suggests changing PRICES or publishing CONTENT, output &quot;RISK: YES&quot;.
+   - If the recommendation is just analysis, reporting, or checking status, output &quot;RISK: NO&quot;.]]&gt;</span>
+        <span class="sas-k">&lt;/synthesis_prompt</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/prompts</span><span class="sas-k">&gt;</span>
+
+    <span class="sas-k">&lt;scenarios</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;1&quot;</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;true&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>november<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>bookings<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>construction<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>noise<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>concert<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>swift<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>demand<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>families<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>family<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>crib<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>price<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>competitor<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenarios</span><span class="sas-k">&gt;</span>
+
+    <span class="sas-k">&lt;agents</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;market_scout&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Market Scout&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>events, weather<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;No significant market alerts.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;event&quot;</span>: <span class="sas-s">&quot;Tech Summit&quot;</span>, <span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;CANCELLED&quot;</span>, <span class="sas-s">&quot;impact&quot;</span>: <span class="sas-s">&quot;negative demand&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;alert&quot;</span>: <span class="sas-s">&quot;City Construction&quot;</span>, <span class="sas-s">&quot;location&quot;</span>: <span class="sas-s">&quot;Main St&quot;</span>, <span class="sas-s">&quot;duration&quot;</span>: <span class="sas-s">&quot;2 weeks&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;event&quot;</span>: <span class="sas-s">&quot;Taylor Swift Eras Tour&quot;</span>, <span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;NEW_ANNOUNCEMENT&quot;</span>, <span class="sas-s">&quot;impact&quot;</span>: <span class="sas-s">&quot;massive demand spike&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;demographic&quot;</span>: <span class="sas-s">&quot;Families&quot;</span>, <span class="sas-s">&quot;flight_capacity&quot;</span>: <span class="sas-s">&quot;+20%&quot;</span>, <span class="sas-s">&quot;origin&quot;</span>: <span class="sas-s">&quot;Domestic&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;market_status&quot;</span>: <span class="sas-s">&quot;stable&quot;</span>, <span class="sas-s">&quot;competitor_activity&quot;</span>: <span class="sas-s">&quot;aggressive discounting&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;revenue_strategist&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Revenue Strategist&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>pricing, rates<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Rates are optimal.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;your_rate&quot;</span>: 250, <span class="sas-s">&quot;comp_rate&quot;</span>: 200, <span class="sas-s">&quot;variance&quot;</span>: <span class="sas-s">&quot;Drop rate by $50&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Drop Rate&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;occupancy&quot;</span>: <span class="sas-s">&quot;dropping&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Offer 15% Discount&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;your_rate&quot;</span>: 200, <span class="sas-s">&quot;market_demand&quot;</span>: <span class="sas-s">&quot;surge&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Raise Rate to $350&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;opportunity&quot;</span>: <span class="sas-s">&quot;Multi-room bookings&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Create Family Package&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;alert&quot;</span>: <span class="sas-s">&quot;Price War&quot;</span>, <span class="sas-s">&quot;comp_move&quot;</span>: <span class="sas-s">&quot;-$30 drop&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Match competitor rate or add value&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;content_specialist&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Content Specialist&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>photos, description<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Content score is 100%.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;issue&quot;</span>: <span class="sas-s">&quot;Seasonality mismatch&quot;</span>, <span class="sas-s">&quot;current_img&quot;</span>: <span class="sas-s">&quot;Pool&quot;</span>, <span class="sas-s">&quot;suggested_img&quot;</span>: <span class="sas-s">&quot;Fireplace&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Update Description: Construction Warning.&quot;</span>, <span class="sas-s">&quot;text&quot;</span>: <span class="sas-s">&quot;Entrance via side door due to roadwork&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;SEO Update: Concert Keywords&quot;</span>, <span class="sas-s">&quot;keyword&quot;</span>: <span class="sas-s">&quot;Near Stadium&quot;</span>, <span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;Applied&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Add amenity: Cribs&quot;</span>, <span class="sas-s">&quot;detail&quot;</span>: <span class="sas-s">&quot;Tag as an amenity so the listing appears in family filters&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;value_prop&quot;</span>: <span class="sas-s">&quot;Free Breakfast&quot;</span>, <span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Highlight in Hero Image&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;guest_experience&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Guest Experience&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>reviews, sentiment<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Sentiment is stable.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;sentiment&quot;</span>: <span class="sas-s">&quot;Neutral&quot;</span>, <span class="sas-s">&quot;recent_issues&quot;</span>: <span class="sas-s">&quot;None&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;sentiment&quot;</span>: <span class="sas-s">&quot;Negative&quot;</span>, <span class="sas-s">&quot;keywords&quot;</span>: [<span class="sas-s">&quot;Noise&quot;</span>, <span class="sas-s">&quot;Drilling&quot;</span>, <span class="sas-s">&quot;Early Morning&quot;</span>]}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;sentiment&quot;</span>: <span class="sas-s">&quot;Positive&quot;</span>, <span class="sas-s">&quot;keywords&quot;</span>: [<span class="sas-s">&quot;Excited&quot;</span>, <span class="sas-s">&quot;Concert&quot;</span>]}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;sentiment&quot;</span>: <span class="sas-s">&quot;Positive&quot;</span>, <span class="sas-s">&quot;keywords&quot;</span>: [<span class="sas-s">&quot;Pool Safety&quot;</span>, <span class="sas-s">&quot;Kids Club&quot;</span>]}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;sentiment&quot;</span>: <span class="sas-s">&quot;Mixed&quot;</span>, <span class="sas-s">&quot;keywords&quot;</span>: [<span class="sas-s">&quot;Expensive&quot;</span>, <span class="sas-s">&quot;Not worth it&quot;</span>]}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+        
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;facilities_manager&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Facilities Manager&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>maintenance, housekeeping, physical inventory<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;All facilities operating normally.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;low_occupancy&quot;</span>, <span class="sas-s">&quot;action_recommended&quot;</span>: <span class="sas-s">&quot;Schedule deep cleaning and preventative maintenance for empty wings.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;alert&quot;</span>: <span class="sas-s">&quot;External noise high&quot;</span>, <span class="sas-s">&quot;action_recommended&quot;</span>: <span class="sas-s">&quot;Place complimentary earplugs and apology notes in street-facing rooms.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;max_occupancy&quot;</span>, <span class="sas-s">&quot;action_recommended&quot;</span>: <span class="sas-s">&quot;Approve overtime for housekeeping to ensure rapid room turnover before the event.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;inventory_check&quot;</span>: <span class="sas-s">&quot;Cribs and rollaway beds&quot;</span>, <span class="sas-s">&quot;in_use&quot;</span>: 2, <span class="sas-s">&quot;available&quot;</span>: 8, <span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;sufficient&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;status&quot;</span>: <span class="sas-s">&quot;standard&quot;</span>, <span class="sas-s">&quot;opportunity&quot;</span>: <span class="sas-s">&quot;Approve free late checkout requests to increase perceived guest value.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/agents</span><span class="sas-k">&gt;</span>
+<span class="sas-k">&lt;/system_config</span><span class="sas-k">&gt;</span></pre></div></details>
+    <details class="src"><summary>config/config_agency.xml, 114 lines</summary><div class="codewrap"><div class="head"><code>config/config_agency.xml</code></div><pre class="code clip"><span class="sas-c">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="sas-k">&lt;system_config</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;prompts</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;router_prompt</span><span class="sas-k">&gt;</span>
+<span class="sas-s">&lt;![CDATA[You are an Engagement Manager at a top-tier management consulting firm. Select the appropriate specialized agents to consult based on the user&#x27;s request.
+Available Agents: 
+{agent_list}
+
+Return ONLY a JSON list of agent IDs, e.g. [&quot;market_analyst&quot;, &quot;financial_modeler&quot;]]]&gt;</span>
+        <span class="sas-k">&lt;/router_prompt</span><span class="sas-k">&gt;</span>
+        
+        <span class="sas-k">&lt;synthesis_prompt</span><span class="sas-k">&gt;</span>
+<span class="sas-s">&lt;![CDATA[User Request: {user_input}
+Agent Data: {agent_data}
+
+Task: 
+1. Synthesize the agents&#x27; findings into a cohesive, executive-level consulting recommendation for the client.
+2. DETERMINE RISK: 
+   - If the recommendation suggests LAYOFFS/REDUNDANCIES, BUDGET REALLOCATIONS over $1M, or MAJOR RESTRUCTURING, output &quot;RISK: YES&quot;.
+   - If the recommendation is pure market research, risk assessment, or process mapping, output &quot;RISK: NO&quot;.]]&gt;</span>
+        <span class="sas-k">&lt;/synthesis_prompt</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/prompts</span><span class="sas-k">&gt;</span>
+
+    <span class="sas-k">&lt;scenarios</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;1&quot;</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;true&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>supply<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>chain<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>freight<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>delays<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>competitor<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>tech<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>ai<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>launch<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>merger<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>acquisition<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>redundancies<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>headcount<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>synergies<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>expansion<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>market<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>europe<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>hub<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;scenario</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>esg<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>carbon<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>compliance<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;keyword</span><span class="sas-k">&gt;</span>regulations<span class="sas-k">&lt;/keyword</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/scenario</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/scenarios</span><span class="sas-k">&gt;</span>
+
+    <span class="sas-k">&lt;agents</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;market_analyst&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Market Intelligence Analyst&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>Competitor moves, industry trends, macroeconomics, market share.<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Market conditions are currently stable with no major disruptive trends detected.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;trend&quot;</span>: <span class="sas-s">&quot;Near-shoring&quot;</span>, <span class="sas-s">&quot;insight&quot;</span>: <span class="sas-s">&quot;Competitors are moving manufacturing to Mexico to avoid trans-Pacific shipping delays.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;competitor_action&quot;</span>: <span class="sas-s">&quot;Product Launch&quot;</span>, <span class="sas-s">&quot;threat_level&quot;</span>: <span class="sas-s">&quot;High&quot;</span>, <span class="sas-s">&quot;insight&quot;</span>: <span class="sas-s">&quot;Competitor X just launched an AI-driven platform capturing 5% market share in Q1.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;trend&quot;</span>: <span class="sas-s">&quot;Industry Consolidation&quot;</span>, <span class="sas-s">&quot;insight&quot;</span>: <span class="sas-s">&quot;MA activity is up 15% in this sector; market expects high synergy realization.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;market_growth&quot;</span>: <span class="sas-s">&quot;Europe&quot;</span>, <span class="sas-s">&quot;cagr&quot;</span>: <span class="sas-s">&quot;8%&quot;</span>, <span class="sas-s">&quot;insight&quot;</span>: <span class="sas-s">&quot;EU market presents strong growth, but local competition is deeply entrenched.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;trend&quot;</span>: <span class="sas-s">&quot;Green Consumerism&quot;</span>, <span class="sas-s">&quot;insight&quot;</span>: <span class="sas-s">&quot;60% of target demographic now factoring carbon footprint into purchasing decisions.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;financial_modeler&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Financial Modeler&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>Revenue projections, cost analysis, margin impact, ROI calculations.<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Current financial margins are aligned with industry benchmarks.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;cost_impact&quot;</span>: <span class="sas-s">&quot;Freight costs up 15%&quot;</span>, <span class="sas-s">&quot;margin_pressure&quot;</span>: <span class="sas-s">&quot;Severe&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Hedge fuel costs and renegotiate 3PL contracts.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;revenue_at_risk&quot;</span>: <span class="sas-s">&quot;$15M annually&quot;</span>, <span class="sas-s">&quot;roi_to_match&quot;</span>: <span class="sas-s">&quot;18 months&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Allocate $5M RD budget to fast-track matching AI capabilities.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;synergy_target&quot;</span>: <span class="sas-s">&quot;$50M&quot;</span>, <span class="sas-s">&quot;opex_reduction&quot;</span>: <span class="sas-s">&quot;12%&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Consolidate overlapping administrative and IT budgets immediately.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;capex_required&quot;</span>: <span class="sas-s">&quot;$10M initial investment&quot;</span>, <span class="sas-s">&quot;payback_period&quot;</span>: <span class="sas-s">&quot;3.5 years&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Approve funding gate 1 for regional infrastructure.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;tax_exposure&quot;</span>: <span class="sas-s">&quot;$5M annual carbon tax&quot;</span>, <span class="sas-s">&quot;mitigation_cost&quot;</span>: <span class="sas-s">&quot;$2M retrofitting&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Invest in energy efficiency to realize a net $3M annual saving.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;org_strategist&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Organizational Strategist&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>Workforce planning, change management, leadership, restructuring.<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Organizational health is stable; retention rates are normal.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;workforce_gap&quot;</span>: <span class="sas-s">&quot;Procurement Agility&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Upskill procurement team on alternative sourcing and dynamic contract negotiation.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;talent_gap&quot;</span>: <span class="sas-s">&quot;AI Engineering&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Acqui-hire a boutique AI startup to rapidly onboard necessary technical talent.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Restructuring&quot;</span>, <span class="sas-s">&quot;impact&quot;</span>: <span class="sas-s">&quot;10% headcount reduction in overlapping departments.&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Draft severance packages and retention bonuses for key personnel.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;hiring_need&quot;</span>: <span class="sas-s">&quot;Regional Leadership&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Initiate executive search for a European Managing Director with localized network.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;leadership_gap&quot;</span>: <span class="sas-s">&quot;Sustainability&quot;</span>, <span class="sas-s">&quot;recommendation&quot;</span>: <span class="sas-s">&quot;Appoint a Chief Sustainability Officer (CSO) to report directly to the CEO.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;operations_specialist&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Operations Specialist&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>Supply chain efficiency, process optimization, technology/ERP adoption.<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;Core operational processes are functioning at target utilization rates.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;bottleneck&quot;</span>: <span class="sas-s">&quot;Tier-1 Suppliers&quot;</span>, <span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Activate secondary suppliers in LATAM to bypass current port congestion.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;tech_debt&quot;</span>: <span class="sas-s">&quot;Legacy Cloud Infrastructure&quot;</span>, <span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Migrate core databases to scalable cloud architecture to support new AI workloads.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;integration&quot;</span>: <span class="sas-s">&quot;ERP Systems&quot;</span>, <span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Migrate acquired company onto the parent instance of SAP within 90 days.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;logistics&quot;</span>: <span class="sas-s">&quot;Distribution&quot;</span>, <span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Establish a centralized fulfillment hub in Germany to serve the EU market.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;facility_update&quot;</span>: <span class="sas-s">&quot;Manufacturing Plants&quot;</span>, <span class="sas-s">&quot;action&quot;</span>: <span class="sas-s">&quot;Retrofit top 3 producing plants with IoT energy monitoring sensors.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+
+        <span class="sas-k">&lt;agent</span> <span class="sas-p">id</span>=<span class="sas-s">&quot;risk_compliance&quot;</span> <span class="sas-p">name</span>=<span class="sas-s">&quot;Risk &amp;amp; Compliance Officer&quot;</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;description</span><span class="sas-k">&gt;</span>Regulatory changes, legal risks, PR impact, data privacy.<span class="sas-k">&lt;/description</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;mock_data</span> <span class="sas-p">default</span>=<span class="sas-s">&quot;No imminent regulatory or compliance risks detected.&quot;</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;1&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;risk_level&quot;</span>: <span class="sas-s">&quot;Low&quot;</span>, <span class="sas-s">&quot;concern&quot;</span>: <span class="sas-s">&quot;Quality control variations with new suppliers.&quot;</span>, <span class="sas-s">&quot;mitigation&quot;</span>: <span class="sas-s">&quot;Deploy on-site quality assurance auditors to LATAM facilities.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;2&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;risk_level&quot;</span>: <span class="sas-s">&quot;Medium&quot;</span>, <span class="sas-s">&quot;concern&quot;</span>: <span class="sas-s">&quot;Data privacy and AI bias.&quot;</span>, <span class="sas-s">&quot;mitigation&quot;</span>: <span class="sas-s">&quot;Establish an AI ethics committee before pushing products to production.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;3&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;risk_level&quot;</span>: <span class="sas-s">&quot;High&quot;</span>, <span class="sas-s">&quot;concern&quot;</span>: <span class="sas-s">&quot;Employment law violations and PR backlash from layoffs.&quot;</span>, <span class="sas-s">&quot;mitigation&quot;</span>: <span class="sas-s">&quot;Engage local labor counsel to ensure compliance with WARN Act/local equivalents.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;4&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;risk_level&quot;</span>: <span class="sas-s">&quot;High&quot;</span>, <span class="sas-s">&quot;concern&quot;</span>: <span class="sas-s">&quot;GDPR compliance and local employment laws.&quot;</span>, <span class="sas-s">&quot;mitigation&quot;</span>: <span class="sas-s">&quot;Audit all data collection methods to ensure strict EU GDPR adherence.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+                <span class="sas-k">&lt;response</span> <span class="sas-p">scenario_id</span>=<span class="sas-s">&quot;5&quot;</span><span class="sas-k">&gt;</span>{<span class="sas-s">&quot;risk_level&quot;</span>: <span class="sas-s">&quot;Critical&quot;</span>, <span class="sas-s">&quot;concern&quot;</span>: <span class="sas-s">&quot;Non-compliance fines up to $10M.&quot;</span>, <span class="sas-s">&quot;mitigation&quot;</span>: <span class="sas-s">&quot;Accelerate ESG reporting audits and certify current emissions baseline.&quot;</span>}<span class="sas-k">&lt;/response</span><span class="sas-k">&gt;</span>
+            <span class="sas-k">&lt;/mock_data</span><span class="sas-k">&gt;</span>
+        <span class="sas-k">&lt;/agent</span><span class="sas-k">&gt;</span>
+    <span class="sas-k">&lt;/agents</span><span class="sas-k">&gt;</span>
+<span class="sas-k">&lt;/system_config</span><span class="sas-k">&gt;</span></pre></div></details>
+    <details class="src"><summary>agentic_network/graph.py, 197 lines</summary><div class="codewrap"><div class="head"><code>agentic_network/graph.py</code></div><pre class="code clip"><span class="sas-s">&quot;&quot;&quot;The LangGraph state machine: broker, specialists, and a human gate.
+
+Shape of a run:
+
+    user question
+        -&gt; broker            decides which specialists to consult
+        -&gt; specialists       fan out in parallel, each returns its fixture
+        -&gt; broker            synthesises one answer and scores its risk
+        -&gt; human_approval    only when the risk score says so
+        -&gt; END
+
+Every node is generated from the config, so the roster is data rather than code.
+&quot;&quot;&quot;</span>
+
+<span class="sas-k">from</span> __future__ <span class="sas-k">import</span> annotations
+
+<span class="sas-k">import</span> json
+<span class="sas-k">import</span> os
+<span class="sas-k">from</span> dataclasses <span class="sas-k">import</span> dataclass
+<span class="sas-k">from</span> typing <span class="sas-k">import</span> Annotated, Any, TypedDict
+
+<span class="sas-k">from</span> langchain_core.messages <span class="sas-k">import</span> HumanMessage, SystemMessage
+<span class="sas-k">from</span> langgraph.graph <span class="sas-k">import</span> END, StateGraph
+
+<span class="sas-k">from</span> .channels <span class="sas-k">import</span> Channel, ConsoleChannel
+<span class="sas-k">from</span> .config <span class="sas-k">import</span> NetworkConfig
+
+
+<span class="sas-k">def</span> _merge(left: <span class="sas-p">dict</span> | <span class="sas-k">None</span>, right: <span class="sas-p">dict</span> | <span class="sas-k">None</span>) -&gt; <span class="sas-p">dict</span>:
+    <span class="sas-s">&quot;&quot;&quot;Reducer letting parallel agent nodes write into one dict without clobbering.&quot;&quot;&quot;</span>
+    <span class="sas-k">return</span> {**(left <span class="sas-k">or</span> {}), **(right <span class="sas-k">or</span> {})}
+
+
+<span class="sas-k">class</span> AgentState(TypedDict, total=<span class="sas-k">False</span>):
+    input: <span class="sas-p">str</span>
+    scenario_id: <span class="sas-p">int</span>
+    broker_plan: <span class="sas-p">list</span>[<span class="sas-p">str</span>]
+    agent_outputs: Annotated[<span class="sas-p">dict</span>[<span class="sas-p">str</span>, <span class="sas-p">str</span>], _merge]
+    final_response: <span class="sas-p">str</span>
+    requires_approval: <span class="sas-p">bool</span>
+    approval_decision: <span class="sas-p">str</span>
+
+
+<span class="sas-k">def</span> _default_llm():
+    <span class="sas-s">&quot;&quot;&quot;A ChatOpenAI reading its key from the environment.
+
+    Imported lazily so the rest of the package can be used, and tested, without
+    langchain_openai installed or a key present.
+    &quot;&quot;&quot;</span>
+    <span class="sas-k">from</span> langchain_openai <span class="sas-k">import</span> ChatOpenAI
+
+    <span class="sas-k">if</span> <span class="sas-k">not</span> os.environ.get(<span class="sas-s">&quot;OPENAI_API_KEY&quot;</span>):
+        <span class="sas-k">raise</span> <span class="sas-p">RuntimeError</span>(
+            <span class="sas-s">&quot;OPENAI_API_KEY is not set. Copy .env.example to .env and put your key &quot;</span>
+            <span class="sas-s">&quot;there, or export it in your shell. See scripts/check_key.py.&quot;</span>
+        )
+    <span class="sas-k">return</span> ChatOpenAI(model=<span class="sas-s">&quot;gpt-4o&quot;</span>, temperature=<span class="sas-n">0</span>)
+
+
+<span class="sas-p">@dataclass</span>
+<span class="sas-k">class</span> Network:
+    <span class="sas-s">&quot;&quot;&quot;A compiled network, ready to answer questions.&quot;&quot;&quot;</span>
+
+    config: NetworkConfig
+    channel: Channel
+    app: Any
+
+    <span class="sas-k">def</span> run(<span class="sas-p">self</span>, question: <span class="sas-p">str</span>, scenario_id: <span class="sas-p">int</span> | <span class="sas-k">None</span> = <span class="sas-k">None</span>) -&gt; <span class="sas-p">str</span>:
+        <span class="sas-s">&quot;&quot;&quot;Answer one question. Returns the final text.&quot;&quot;&quot;</span>
+        <span class="sas-k">if</span> scenario_id <span class="sas-k">is</span> <span class="sas-k">None</span>:
+            scenario_id = <span class="sas-p">self</span>.config.scenario_for(question)
+        <span class="sas-p">self</span>.channel.log(<span class="sas-s">f&quot;scenario {scenario_id} selected for: {question!r}&quot;</span>)
+        state = <span class="sas-p">self</span>.app.invoke(
+            {<span class="sas-s">&quot;input&quot;</span>: question, <span class="sas-s">&quot;scenario_id&quot;</span>: scenario_id, <span class="sas-s">&quot;agent_outputs&quot;</span>: {}}
+        )
+        <span class="sas-k">return</span> state.get(<span class="sas-s">&quot;final_response&quot;</span>, <span class="sas-s">&quot;&quot;</span>)
+
+
+<span class="sas-k">def</span> build_network(
+    config: NetworkConfig,
+    llm=<span class="sas-k">None</span>,
+    channel: Channel | <span class="sas-k">None</span> = <span class="sas-k">None</span>,
+) -&gt; Network:
+    <span class="sas-s">&quot;&quot;&quot;Turn a config into a runnable network.&quot;&quot;&quot;</span>
+    llm = llm <span class="sas-k">or</span> _default_llm()
+    channel = channel <span class="sas-k">or</span> ConsoleChannel()
+
+    <span class="sas-k">def</span> specialist(agent_id: <span class="sas-p">str</span>):
+        agent = config.agents[agent_id]
+
+        <span class="sas-k">def</span> node(state: AgentState) -&gt; <span class="sas-p">dict</span>:
+            reply = agent.reply_for(state[<span class="sas-s">&quot;scenario_id&quot;</span>])
+            channel.status(<span class="sas-s">f&quot;Consulting {agent.name} ...&quot;</span>)
+            channel.log(<span class="sas-s">f&quot;{agent.name} returned: {reply}&quot;</span>)
+            <span class="sas-k">return</span> {<span class="sas-s">&quot;agent_outputs&quot;</span>: {agent.name: reply}}
+
+        <span class="sas-k">return</span> node
+
+    <span class="sas-k">def</span> broker(state: AgentState) -&gt; <span class="sas-p">dict</span>:
+        outputs = state.get(<span class="sas-s">&quot;agent_outputs&quot;</span>) <span class="sas-k">or</span> {}
+
+        <span class="sas-k">if</span> outputs:
+            channel.status(<span class="sas-s">&quot;Synthesising and scoring risk ...&quot;</span>)
+            prompt = (
+                config.synthesis_prompt
+                .replace(<span class="sas-s">&quot;{user_input}&quot;</span>, state[<span class="sas-s">&quot;input&quot;</span>])
+                .replace(<span class="sas-s">&quot;{agent_data}&quot;</span>, json.dumps(outputs))
+            )
+            answer = llm.invoke([SystemMessage(content=prompt)]).content
+            needs_approval = <span class="sas-s">&quot;RISK: YES&quot;</span> <span class="sas-k">in</span> answer.upper()
+            channel.log(<span class="sas-s">f&quot;synthesis complete, requires_approval={needs_approval}&quot;</span>)
+            <span class="sas-k">if</span> <span class="sas-k">not</span> needs_approval:
+                channel.chat(answer)
+                channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
+            <span class="sas-k">return</span> {<span class="sas-s">&quot;final_response&quot;</span>: answer, <span class="sas-s">&quot;requires_approval&quot;</span>: needs_approval}
+
+        channel.status(<span class="sas-s">&quot;Analysing intent ...&quot;</span>)
+        system = config.router_prompt.replace(<span class="sas-s">&quot;{agent_list}&quot;</span>, config.roster())
+        raw = llm.invoke(
+            [SystemMessage(content=system), HumanMessage(content=state[<span class="sas-s">&quot;input&quot;</span>])]
+        ).content
+        plan = _parse_plan(raw, config, channel)
+        channel.status(<span class="sas-s">f&quot;Delegating to {&#x27;, &#x27;.join(plan)}&quot;</span>)
+        <span class="sas-k">return</span> {<span class="sas-s">&quot;broker_plan&quot;</span>: plan}
+
+    <span class="sas-k">def</span> human_approval(state: AgentState) -&gt; <span class="sas-p">dict</span>:
+        proposal = state[<span class="sas-s">&quot;final_response&quot;</span>]
+        channel.status(<span class="sas-s">&quot;Waiting for human approval ...&quot;</span>)
+        channel.log(<span class="sas-s">f&quot;proposal put to a human:\n{proposal}&quot;</span>)
+
+        <span class="sas-k">if</span> channel.ask_approval(proposal):
+            channel.log(<span class="sas-s">&quot;human approved&quot;</span>)
+            <span class="sas-c"># Deliver exactly the text that was approved. Routing back through the</span>
+            <span class="sas-c"># broker would re-run synthesis and hand the user a different answer</span>
+            <span class="sas-c"># from the one they authorised.</span>
+            final = proposal + <span class="sas-s">&quot;\n\n[STATUS: APPROVED BY HUMAN, EXECUTED]&quot;</span>
+            channel.chat(final)
+            channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
+            <span class="sas-k">return</span> {<span class="sas-s">&quot;approval_decision&quot;</span>: <span class="sas-s">&quot;APPROVED&quot;</span>, <span class="sas-s">&quot;final_response&quot;</span>: final}
+
+        channel.log(<span class="sas-s">&quot;human rejected&quot;</span>)
+        final = <span class="sas-s">&quot;ACTION CANCELLED. The human operator rejected the proposal.\n\nWhat was proposed:\n&quot;</span> + proposal
+        channel.chat(final)
+        channel.status(<span class="sas-s">&quot;Ready&quot;</span>)
+        <span class="sas-k">return</span> {<span class="sas-s">&quot;approval_decision&quot;</span>: <span class="sas-s">&quot;REJECTED&quot;</span>, <span class="sas-s">&quot;final_response&quot;</span>: final}
+
+    graph = StateGraph(AgentState)
+    graph.add_node(<span class="sas-s">&quot;broker&quot;</span>, broker)
+    graph.add_node(<span class="sas-s">&quot;human_approval&quot;</span>, human_approval)
+    <span class="sas-k">for</span> agent_id <span class="sas-k">in</span> config.agents:
+        graph.add_node(agent_id, specialist(agent_id))
+
+    <span class="sas-k">def</span> route(state: AgentState):
+        <span class="sas-k">if</span> state.get(<span class="sas-s">&quot;requires_approval&quot;</span>):
+            <span class="sas-k">return</span> <span class="sas-s">&quot;human_approval&quot;</span>
+        <span class="sas-k">if</span> state.get(<span class="sas-s">&quot;final_response&quot;</span>):
+            <span class="sas-k">return</span> END
+        <span class="sas-k">return</span> state.get(<span class="sas-s">&quot;broker_plan&quot;</span>) <span class="sas-k">or</span> [<span class="sas-p">next</span>(<span class="sas-p">iter</span>(config.agents))]
+
+    graph.set_entry_point(<span class="sas-s">&quot;broker&quot;</span>)
+    graph.add_conditional_edges(
+        <span class="sas-s">&quot;broker&quot;</span>, route, <span class="sas-p">list</span>(config.agents) + [<span class="sas-s">&quot;human_approval&quot;</span>, END]
+    )
+    <span class="sas-k">for</span> agent_id <span class="sas-k">in</span> config.agents:
+        graph.add_edge(agent_id, <span class="sas-s">&quot;broker&quot;</span>)
+    <span class="sas-c"># The gate is terminal. Going back to the broker would re-synthesise.</span>
+    graph.add_edge(<span class="sas-s">&quot;human_approval&quot;</span>, END)
+
+    <span class="sas-k">return</span> Network(config=config, channel=channel, app=graph.compile())
+
+
+<span class="sas-k">def</span> _parse_plan(raw: <span class="sas-p">str</span>, config: NetworkConfig, channel: Channel) -&gt; <span class="sas-p">list</span>[<span class="sas-p">str</span>]:
+    <span class="sas-s">&quot;&quot;&quot;Read the router&#x27;s JSON list of agent ids, and say so when it is malformed.
+
+    Falls back to a single agent rather than raising, but logs every reason it
+    did: unparseable output, a non-list, or names that are not in the roster.
+    An unlogged fallback is indistinguishable from a real routing decision.
+    &quot;&quot;&quot;</span>
+    cleaned = raw.replace(<span class="sas-s">&quot;```json&quot;</span>, <span class="sas-s">&quot;&quot;</span>).replace(<span class="sas-s">&quot;```&quot;</span>, <span class="sas-s">&quot;&quot;</span>).strip()
+    fallback = [<span class="sas-p">next</span>(<span class="sas-p">iter</span>(config.agents))]
+    <span class="sas-k">try</span>:
+        plan = json.loads(cleaned)
+    <span class="sas-k">except</span> json.JSONDecodeError <span class="sas-k">as</span> exc:
+        channel.log(<span class="sas-s">f&quot;router returned unparseable JSON ({exc}); falling back. Raw: {raw!r}&quot;</span>)
+        <span class="sas-k">return</span> fallback
+
+    <span class="sas-k">if</span> <span class="sas-k">not</span> <span class="sas-p">isinstance</span>(plan, <span class="sas-p">list</span>):
+        channel.log(<span class="sas-s">f&quot;router returned {type(plan).__name__}, expected a list; falling back.&quot;</span>)
+        <span class="sas-k">return</span> fallback
+
+    known = [a <span class="sas-k">for</span> a <span class="sas-k">in</span> plan <span class="sas-k">if</span> a <span class="sas-k">in</span> config.agents]
+    <span class="sas-k">if</span> unknown := [a <span class="sas-k">for</span> a <span class="sas-k">in</span> plan <span class="sas-k">if</span> a <span class="sas-k">not</span> <span class="sas-k">in</span> config.agents]:
+        channel.log(<span class="sas-s">f&quot;router named agents that do not exist, ignoring: {unknown}&quot;</span>)
+    <span class="sas-k">if</span> <span class="sas-k">not</span> known:
+        channel.log(<span class="sas-s">&quot;router named no valid agents; falling back.&quot;</span>)
+        <span class="sas-k">return</span> fallback
+    <span class="sas-k">return</span> known</pre></div></details>
+    <details class="src"><summary>agentic_network/config.py, 119 lines</summary><div class="codewrap"><div class="head"><code>agentic_network/config.py</code></div><pre class="code clip"><span class="sas-s">&quot;&quot;&quot;Load an agent network definition from XML.
+
+One XML file describes a whole network: the prompt the broker uses to route, the
+prompt it uses to synthesise, the demo scenarios, and for each agent its identity,
+its advertised capability and its canned reply per scenario.
+&quot;&quot;&quot;</span>
+
+<span class="sas-k">from</span> __future__ <span class="sas-k">import</span> annotations
+
+<span class="sas-k">import</span> re
+<span class="sas-k">import</span> xml.etree.ElementTree <span class="sas-k">as</span> ET
+<span class="sas-k">from</span> dataclasses <span class="sas-k">import</span> dataclass, field
+<span class="sas-k">from</span> pathlib <span class="sas-k">import</span> Path
+
+
+<span class="sas-p">@dataclass</span>
+<span class="sas-k">class</span> Agent:
+    <span class="sas-s">&quot;&quot;&quot;One specialist in the network.&quot;&quot;&quot;</span>
+
+    id: <span class="sas-p">str</span>
+    name: <span class="sas-p">str</span>
+    description: <span class="sas-p">str</span>
+    default_reply: <span class="sas-p">str</span>
+    replies: <span class="sas-p">dict</span>[<span class="sas-p">int</span>, <span class="sas-p">str</span>] = field(default_factory=<span class="sas-p">dict</span>)
+
+    <span class="sas-k">def</span> reply_for(<span class="sas-p">self</span>, scenario_id: <span class="sas-p">int</span>) -&gt; <span class="sas-p">str</span>:
+        <span class="sas-s">&quot;&quot;&quot;The fixture this agent returns for a scenario.
+
+        Every reply is canned. No agent calls a real API; see the project README.
+        &quot;&quot;&quot;</span>
+        <span class="sas-k">return</span> <span class="sas-p">self</span>.replies.get(scenario_id, <span class="sas-p">self</span>.default_reply)
+
+
+<span class="sas-p">@dataclass</span>
+<span class="sas-k">class</span> Scenario:
+    <span class="sas-s">&quot;&quot;&quot;A demo situation, selected by keyword match against the user&#x27;s question.&quot;&quot;&quot;</span>
+
+    id: <span class="sas-p">int</span>
+    keywords: <span class="sas-p">list</span>[<span class="sas-p">str</span>]
+
+
+<span class="sas-p">@dataclass</span>
+<span class="sas-k">class</span> NetworkConfig:
+    router_prompt: <span class="sas-p">str</span>
+    synthesis_prompt: <span class="sas-p">str</span>
+    scenarios: <span class="sas-p">list</span>[Scenario]
+    default_scenario: <span class="sas-p">int</span>
+    agents: <span class="sas-p">dict</span>[<span class="sas-p">str</span>, Agent]
+
+    <span class="sas-k">def</span> scenario_for(<span class="sas-p">self</span>, prompt: <span class="sas-p">str</span>) -&gt; <span class="sas-p">int</span>:
+        <span class="sas-s">&quot;&quot;&quot;Pick a scenario by keyword.
+
+        Keywords match on word boundaries with an optional plural, so &quot;crib&quot;
+        matches &quot;cribs&quot; while &quot;ai&quot; matches &quot;AI&quot; and &quot;AI-driven&quot; but not &quot;retail&quot;,
+        &quot;explain&quot; or &quot;email&quot;. Substring matching would catch all three and route
+        them to the wrong scenario without raising anything. First match in
+        document order wins, so order the scenarios from most to least specific.
+        &quot;&quot;&quot;</span>
+        text = prompt.lower()
+        <span class="sas-k">for</span> sc <span class="sas-k">in</span> <span class="sas-p">self</span>.scenarios:
+            <span class="sas-k">for</span> kw <span class="sas-k">in</span> sc.keywords:
+                <span class="sas-k">if</span> re.search(<span class="sas-s">rf&quot;\b{re.escape(kw)}(?:s|es)?\b&quot;</span>, text):
+                    <span class="sas-k">return</span> sc.id
+        <span class="sas-k">return</span> <span class="sas-p">self</span>.default_scenario
+
+    <span class="sas-k">def</span> roster(<span class="sas-p">self</span>) -&gt; <span class="sas-p">str</span>:
+        <span class="sas-s">&quot;&quot;&quot;The agent list as the router prompt wants to see it.&quot;&quot;&quot;</span>
+        <span class="sas-k">return</span> <span class="sas-s">&quot;\n&quot;</span>.join(<span class="sas-s">f&quot;- {a.id} ({a.description})&quot;</span> <span class="sas-k">for</span> a <span class="sas-k">in</span> <span class="sas-p">self</span>.agents.values())
+
+
+<span class="sas-k">def</span> _text(node, path: <span class="sas-p">str</span>) -&gt; <span class="sas-p">str</span>:
+    found = node.find(path)
+    <span class="sas-k">if</span> found <span class="sas-k">is</span> <span class="sas-k">None</span> <span class="sas-k">or</span> found.text <span class="sas-k">is</span> <span class="sas-k">None</span>:
+        <span class="sas-k">raise</span> <span class="sas-p">ValueError</span>(<span class="sas-s">f&quot;config is missing required element: {path}&quot;</span>)
+    <span class="sas-k">return</span> found.text.strip()
+
+
+<span class="sas-k">def</span> load_config(xml_path: <span class="sas-p">str</span> | Path) -&gt; NetworkConfig:
+    <span class="sas-s">&quot;&quot;&quot;Parse an agent network from XML.&quot;&quot;&quot;</span>
+    xml_path = Path(xml_path)
+    <span class="sas-k">if</span> <span class="sas-k">not</span> xml_path.exists():
+        <span class="sas-k">raise</span> <span class="sas-p">FileNotFoundError</span>(<span class="sas-s">f&quot;No config at {xml_path}&quot;</span>)
+
+    root = ET.parse(xml_path).getroot()
+
+    scenarios: <span class="sas-p">list</span>[Scenario] = []
+    default_scenario = <span class="sas-n">1</span>
+    <span class="sas-k">for</span> sc <span class="sas-k">in</span> root.findall(<span class="sas-s">&quot;./scenarios/scenario&quot;</span>):
+        sc_id = <span class="sas-p">int</span>(sc.get(<span class="sas-s">&quot;id&quot;</span>))
+        <span class="sas-k">if</span> sc.get(<span class="sas-s">&quot;default&quot;</span>) == <span class="sas-s">&quot;true&quot;</span>:
+            default_scenario = sc_id
+        scenarios.append(
+            Scenario(sc_id, [k.text.strip().lower() <span class="sas-k">for</span> k <span class="sas-k">in</span> sc.findall(<span class="sas-s">&quot;keyword&quot;</span>) <span class="sas-k">if</span> k.text])
+        )
+
+    agents: <span class="sas-p">dict</span>[<span class="sas-p">str</span>, Agent] = {}
+    <span class="sas-k">for</span> ag <span class="sas-k">in</span> root.findall(<span class="sas-s">&quot;./agents/agent&quot;</span>):
+        data = ag.find(<span class="sas-s">&quot;mock_data&quot;</span>)
+        agents[ag.get(<span class="sas-s">&quot;id&quot;</span>)] = Agent(
+            id=ag.get(<span class="sas-s">&quot;id&quot;</span>),
+            name=ag.get(<span class="sas-s">&quot;name&quot;</span>),
+            description=_text(ag, <span class="sas-s">&quot;description&quot;</span>),
+            default_reply=data.get(<span class="sas-s">&quot;default&quot;</span>, <span class="sas-s">&quot;&quot;</span>),
+            replies={
+                <span class="sas-p">int</span>(r.get(<span class="sas-s">&quot;scenario_id&quot;</span>)): (r.text <span class="sas-k">or</span> <span class="sas-s">&quot;&quot;</span>).strip()
+                <span class="sas-k">for</span> r <span class="sas-k">in</span> data.findall(<span class="sas-s">&quot;response&quot;</span>)
+            },
+        )
+
+    <span class="sas-k">if</span> <span class="sas-k">not</span> agents:
+        <span class="sas-k">raise</span> <span class="sas-p">ValueError</span>(<span class="sas-s">f&quot;{xml_path} defines no agents&quot;</span>)
+
+    <span class="sas-k">return</span> NetworkConfig(
+        router_prompt=_text(root, <span class="sas-s">&quot;./prompts/router_prompt&quot;</span>),
+        synthesis_prompt=_text(root, <span class="sas-s">&quot;./prompts/synthesis_prompt&quot;</span>),
+        scenarios=scenarios,
+        default_scenario=default_scenario,
+        agents=agents,
+    )</pre></div></details>
+    <details class="src"><summary>agentic_network/channels.py, 108 lines</summary><div class="codewrap"><div class="head"><code>agentic_network/channels.py</code></div><pre class="code clip"><span class="sas-s">&quot;&quot;&quot;Where the network&#x27;s output goes, and where human answers come from.
+
+The graph itself never prints and never calls input(). It talks to a Channel.
+That is what lets the same graph drive a terminal session, a desktop window or a
+notebook cell without the nodes knowing which.
+&quot;&quot;&quot;</span>
+
+<span class="sas-k">from</span> __future__ <span class="sas-k">import</span> annotations
+
+<span class="sas-k">import</span> queue
+<span class="sas-k">import</span> threading
+
+
+<span class="sas-k">class</span> Channel:
+    <span class="sas-s">&quot;&quot;&quot;Interface between the running graph and whoever is watching it.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> status(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;One-line progress, meant to be overwritten by the next one.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> log(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;Detail for the trace log.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> chat(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;A message addressed to the user.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> ask_approval(<span class="sas-p">self</span>, proposal: <span class="sas-p">str</span>) -&gt; <span class="sas-p">bool</span>:
+        <span class="sas-s">&quot;&quot;&quot;Block until a human approves or rejects. Return True to proceed.&quot;&quot;&quot;</span>
+        <span class="sas-k">raise</span> <span class="sas-p">NotImplementedError</span>
+
+
+<span class="sas-k">class</span> SilentChannel(Channel):
+    <span class="sas-s">&quot;&quot;&quot;Discards everything and auto-rejects. Useful in tests.&quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> ask_approval(<span class="sas-p">self</span>, proposal: <span class="sas-p">str</span>) -&gt; <span class="sas-p">bool</span>:
+        <span class="sas-k">return</span> <span class="sas-k">False</span>
+
+
+<span class="sas-k">class</span> ConsoleChannel(Channel):
+    <span class="sas-s">&quot;&quot;&quot;Terminal and notebook output.
+
+    `verbose` turns on the per-agent trace. `auto_approve` answers the
+    human-in-the-loop gate without prompting, which is what lets a notebook run
+    top to bottom unattended; leave it None to actually ask.
+    &quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> __init__(<span class="sas-p">self</span>, verbose: <span class="sas-p">bool</span> = <span class="sas-k">False</span>, auto_approve: <span class="sas-p">bool</span> | <span class="sas-k">None</span> = <span class="sas-k">None</span>):
+        <span class="sas-p">self</span>.verbose = verbose
+        <span class="sas-p">self</span>.auto_approve = auto_approve
+
+    <span class="sas-k">def</span> status(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-k">if</span> <span class="sas-p">self</span>.verbose:
+            <span class="sas-p">print</span>(<span class="sas-s">f&quot;[status] {message}&quot;</span>)
+
+    <span class="sas-k">def</span> log(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-k">if</span> <span class="sas-p">self</span>.verbose:
+            <span class="sas-p">print</span>(<span class="sas-s">f&quot;[trace]  {message}&quot;</span>)
+
+    <span class="sas-k">def</span> chat(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-p">print</span>(message)
+
+    <span class="sas-k">def</span> ask_approval(<span class="sas-p">self</span>, proposal: <span class="sas-p">str</span>) -&gt; <span class="sas-p">bool</span>:
+        <span class="sas-p">print</span>(<span class="sas-s">&quot;\n&quot;</span> + <span class="sas-s">&quot;=&quot;</span> * <span class="sas-n">62</span>)
+        <span class="sas-p">print</span>(<span class="sas-s">&quot;HUMAN APPROVAL REQUIRED&quot;</span>)
+        <span class="sas-p">print</span>(<span class="sas-s">&quot;=&quot;</span> * <span class="sas-n">62</span>)
+        <span class="sas-p">print</span>(proposal)
+        <span class="sas-p">print</span>(<span class="sas-s">&quot;=&quot;</span> * <span class="sas-n">62</span>)
+        <span class="sas-k">if</span> <span class="sas-p">self</span>.auto_approve <span class="sas-k">is</span> <span class="sas-k">not</span> <span class="sas-k">None</span>:
+            verdict = <span class="sas-s">&quot;approved&quot;</span> <span class="sas-k">if</span> <span class="sas-p">self</span>.auto_approve <span class="sas-k">else</span> <span class="sas-s">&quot;rejected&quot;</span>
+            <span class="sas-p">print</span>(<span class="sas-s">f&quot;(auto_approve={self.auto_approve}: {verdict} without prompting)&quot;</span>)
+            <span class="sas-k">return</span> <span class="sas-p">self</span>.auto_approve
+        <span class="sas-k">return</span> input(<span class="sas-s">&quot;&gt;&gt; Authorize this change? (yes/no): &quot;</span>).strip().lower().startswith(<span class="sas-s">&quot;y&quot;</span>)
+
+
+<span class="sas-k">class</span> QueueChannel(Channel):
+    <span class="sas-s">&quot;&quot;&quot;Feeds a GUI running the graph on a worker thread.
+
+    Messages go onto a queue the UI polls. `ask_approval` blocks the worker on an
+    Event until the UI calls `submit_approval` from the main thread.
+    &quot;&quot;&quot;</span>
+
+    <span class="sas-k">def</span> __init__(<span class="sas-p">self</span>):
+        <span class="sas-p">self</span>.queue: queue.Queue[<span class="sas-p">dict</span>] = queue.Queue()
+        <span class="sas-p">self</span>._answered = threading.Event()
+        <span class="sas-p">self</span>._answer = <span class="sas-k">False</span>
+
+    <span class="sas-k">def</span> _put(<span class="sas-p">self</span>, kind: <span class="sas-p">str</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-p">self</span>.queue.put({<span class="sas-s">&quot;type&quot;</span>: kind, <span class="sas-s">&quot;msg&quot;</span>: message})
+
+    <span class="sas-k">def</span> status(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-p">self</span>._put(<span class="sas-s">&quot;status&quot;</span>, message)
+
+    <span class="sas-k">def</span> log(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-p">self</span>._put(<span class="sas-s">&quot;log&quot;</span>, message)
+
+    <span class="sas-k">def</span> chat(<span class="sas-p">self</span>, message: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-p">self</span>._put(<span class="sas-s">&quot;chat&quot;</span>, message)
+
+    <span class="sas-k">def</span> ask_approval(<span class="sas-p">self</span>, proposal: <span class="sas-p">str</span>) -&gt; <span class="sas-p">bool</span>:
+        <span class="sas-p">self</span>._put(<span class="sas-s">&quot;chat&quot;</span>, <span class="sas-s">f&quot;**APPROVAL REQUIRED**\n\n{proposal}\n\n**Authorize? (yes/no)**&quot;</span>)
+        <span class="sas-p">self</span>._put(<span class="sas-s">&quot;system&quot;</span>, <span class="sas-s">&quot;requires_input&quot;</span>)
+        <span class="sas-p">self</span>._answered.clear()
+        <span class="sas-p">self</span>._answered.wait()
+        <span class="sas-k">return</span> <span class="sas-p">self</span>._answer
+
+    <span class="sas-k">def</span> submit_approval(<span class="sas-p">self</span>, text: <span class="sas-p">str</span>) -&gt; <span class="sas-k">None</span>:
+        <span class="sas-s">&quot;&quot;&quot;Called from the UI thread with the human&#x27;s answer.&quot;&quot;&quot;</span>
+        <span class="sas-p">self</span>._answer = text.strip().lower().startswith(<span class="sas-s">&quot;y&quot;</span>)
+        <span class="sas-p">self</span>._answered.<span class="sas-p">set</span>()</pre></div></details>
+
+    <p class="cta"><a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Browse the repository</a> ·
+       <a href="https://colab.research.google.com/github/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Open the notebook in Colab</a></p>
+    <p>To run any of it, see the README.</p>
+  </section>
+
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Built by John Fisher. Code under the MIT license.
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph">Repository</a> ·
+       <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Notebook</a></p>
+    <p class="sig">The orchestration runs. Every agent reply is a fixture: no vendor API is called.</p>
+  </div>
+</footer>
+
+</body>
+</html>

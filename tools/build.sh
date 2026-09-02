@@ -17,6 +17,7 @@ run () { echo; echo "==> $1"; shift; "$@"; }
 
 run "check the configs still load"  $PY -m tests.test_network
 run "page: architecture"            $PY tools/build_architecture.py
+run "page: the code"                $PY tools/build_code.py
 run "page: overview"                $PY tools/build_index.py
 run "social cards"                  $PY tools/build_cards.py
 
