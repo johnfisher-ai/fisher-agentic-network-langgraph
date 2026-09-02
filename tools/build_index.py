@@ -172,10 +172,6 @@ def build():
       person approves, and a plausible answer appears.{arch_link}</p>
   </section>
 
-  <section>
-    <p class="cta"><a href="{page.REPO}">Browse the repository</a> ·
-       <a href="https://colab.research.google.com/github/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Open the notebook in Colab</a></p>
-  </section>
 """
     body += page.foot()
     page.write("index.html", body)

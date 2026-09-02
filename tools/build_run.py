@@ -135,8 +135,8 @@ python3 -m agentic_network.gui --config config/config_agency.xml''', name="shell
     <p>The notebook carries the design notes and a runnable walkthrough. On Colab it clones the
     repository and installs its own dependencies, so the only thing you supply is the key.</p>
     <p class="cta">
-      <a href="https://colab.research.google.com/github/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Open in Colab</a>
-      <a href="{page.REPO}/blob/main/notebooks/agentic_network.ipynb">View on GitHub</a>
+      <a href="{page.COLAB}">Open in Colab</a>
+      <a href="{page.REPO}/blob/main/notebooks/agentic_network.ipynb">Notebook on GitHub</a>
     </p>
   </section>
 

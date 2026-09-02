@@ -9,6 +9,8 @@ from pathlib import Path
 
 SITE = "https://johnfisher-ai.github.io/fisher-agentic-network-langgraph"
 REPO = "https://github.com/johnfisher-ai/fisher-agentic-network-langgraph"
+COLAB = ("https://colab.research.google.com/github/johnfisher-ai/"
+         "fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb")
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 
 # Nav order. A page appears only once it exists, so the nav never offers a 404.
@@ -86,7 +88,8 @@ def foot():
   <div class="wrap">
     <p>Built by John Fisher. Code under the MIT license.
        <a href="{REPO}">Repository</a> ·
-       <a href="{REPO}/blob/main/notebooks/agentic_network.ipynb">Notebook</a></p>
+       <a href="{REPO}/blob/main/notebooks/agentic_network.ipynb">Notebook</a> ·
+       <a href="{COLAB}">Open in Colab</a></p>
     <p class="sig">The orchestration runs. Every agent reply is a fixture: no vendor API is called.</p>
   </div>
 </footer>

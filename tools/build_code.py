@@ -161,8 +161,6 @@ def build():
     {hl.collapsed("agentic_network/channels.py, " + str(loc("agentic_network/channels.py")) + " lines",
                   read("agentic_network/channels.py"), "python", name="agentic_network/channels.py")}
 
-    <p class="cta"><a href="{page.REPO}">Browse the repository</a> ·
-       <a href="https://colab.research.google.com/github/johnfisher-ai/fisher-agentic-network-langgraph/blob/main/notebooks/agentic_network.ipynb">Open the notebook in Colab</a></p>
     <p>To run any of it, see {run_link}.</p>
   </section>
 """
