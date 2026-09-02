@@ -51,6 +51,14 @@ def build():
     graph is assembled at load time from whatever the config declares, which means the same
     module compiles a five-agent travel network or a five-agent consulting firm without knowing
     the difference.</p>
+
+    <div class="note">
+      <p><strong>What is real, and what is not.</strong> {page.FIXTURES}
+      Every specialist node on this page does one thing: it looks up a string in the config and
+      returns it. The seam where a live integration would attach is
+      <a href="#fixtures"><code>Agent.reply_for</code></a>, and nothing above it, not the graph,
+      not the routing, not the gate, would need to change.</p>
+    </div>
   </section>
 
   <section>
@@ -166,7 +174,7 @@ def build():
     gate, so the test suite asserts that the proposal text survives verbatim into the final
     output, and that synthesis runs exactly once.</p>
 
-  <section>
+  <section id="fixtures">
     <h2>Where the fixtures sit</h2>
     <p>Each agent carries a default reply and one per scenario. The node returns a string; it
     never parses it. The model receives the fixtures as text and does the interpreting, which is

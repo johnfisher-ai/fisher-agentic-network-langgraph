@@ -29,6 +29,7 @@ pages () {
 run "check the configs still load"  $PY -m tests.test_network
 echo; echo "==> pages, pass 1 of 2"; pages
 echo; echo "==> pages, pass 2 of 2 (resolves cross-links)"; pages
+run "check every link resolves"     $PY tools/check_links.py
 run "social cards"                  $PY tools/build_cards.py
 
 echo
