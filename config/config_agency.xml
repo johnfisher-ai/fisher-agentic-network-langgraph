@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system_config>
+    <prompts>
+        <router_prompt>
+<![CDATA[You are an Engagement Manager at a top-tier management consulting firm. Select the appropriate specialized agents to consult based on the user's request.
+Available Agents: 
+{agent_list}
+
+Return ONLY a JSON list of agent IDs, e.g. ["market_analyst", "financial_modeler"]]]>
+        </router_prompt>
+        
+        <synthesis_prompt>
+<![CDATA[User Request: {user_input}
+Agent Data: {agent_data}
+
+Task: 
+1. Synthesize the agents' findings into a cohesive, executive-level consulting recommendation for the client.
+2. DETERMINE RISK: 
+   - If the recommendation suggests LAYOFFS/REDUNDANCIES, BUDGET REALLOCATIONS over $1M, or MAJOR RESTRUCTURING, output "RISK: YES".
+   - If the recommendation is pure market research, risk assessment, or process mapping, output "RISK: NO".]]>
+        </synthesis_prompt>
+    </prompts>
+
+    <scenarios>
+        <scenario id="1" default="true">
+            <keyword>supply</keyword>
+            <keyword>chain</keyword>
+            <keyword>freight</keyword>
+            <keyword>delays</keyword>
+        </scenario>
+        <scenario id="2">
+            <keyword>competitor</keyword>
+            <keyword>tech</keyword>
+            <keyword>ai</keyword>
+            <keyword>launch</keyword>
+        </scenario>
+        <scenario id="3">
+            <keyword>merger</keyword>
+            <keyword>acquisition</keyword>
+            <keyword>redundancies</keyword>
+            <keyword>headcount</keyword>
+            <keyword>synergies</keyword>
+        </scenario>
+        <scenario id="4">
+            <keyword>expansion</keyword>
+            <keyword>market</keyword>
+            <keyword>europe</keyword>
+            <keyword>hub</keyword>
+        </scenario>
+        <scenario id="5">
+            <keyword>esg</keyword>
+            <keyword>carbon</keyword>
+            <keyword>compliance</keyword>
+            <keyword>regulations</keyword>
+        </scenario>
+    </scenarios>
+
+    <agents>
+        <agent id="market_analyst" name="Market Intelligence Analyst">
+            <description>Competitor moves, industry trends, macroeconomics, market share.</description>
+            <mock_data default="Market conditions are currently stable with no major disruptive trends detected.">
+                <response scenario_id="1">{"trend": "Near-shoring", "insight": "Competitors are moving manufacturing to Mexico to avoid trans-Pacific shipping delays."}</response>
+                <response scenario_id="2">{"competitor_action": "Product Launch", "threat_level": "High", "insight": "Competitor X just launched an AI-driven platform capturing 5% market share in Q1."}</response>
+                <response scenario_id="3">{"trend": "Industry Consolidation", "insight": "MA activity is up 15% in this sector; market expects high synergy realization."}</response>
+                <response scenario_id="4">{"market_growth": "Europe", "cagr": "8%", "insight": "EU market presents strong growth, but local competition is deeply entrenched."}</response>
+                <response scenario_id="5">{"trend": "Green Consumerism", "insight": "60% of target demographic now factoring carbon footprint into purchasing decisions."}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="financial_modeler" name="Financial Modeler">
+            <description>Revenue projections, cost analysis, margin impact, ROI calculations.</description>
+            <mock_data default="Current financial margins are aligned with industry benchmarks.">
+                <response scenario_id="1">{"cost_impact": "Freight costs up 15%", "margin_pressure": "Severe", "recommendation": "Hedge fuel costs and renegotiate 3PL contracts."}</response>
+                <response scenario_id="2">{"revenue_at_risk": "$15M annually", "roi_to_match": "18 months", "recommendation": "Allocate $5M RD budget to fast-track matching AI capabilities."}</response>
+                <response scenario_id="3">{"synergy_target": "$50M", "opex_reduction": "12%", "recommendation": "Consolidate overlapping administrative and IT budgets immediately."}</response>
+                <response scenario_id="4">{"capex_required": "$10M initial investment", "payback_period": "3.5 years", "recommendation": "Approve funding gate 1 for regional infrastructure."}</response>
+                <response scenario_id="5">{"tax_exposure": "$5M annual carbon tax", "mitigation_cost": "$2M retrofitting", "recommendation": "Invest in energy efficiency to realize a net $3M annual saving."}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="org_strategist" name="Organizational Strategist">
+            <description>Workforce planning, change management, leadership, restructuring.</description>
+            <mock_data default="Organizational health is stable; retention rates are normal.">
+                <response scenario_id="1">{"workforce_gap": "Procurement Agility", "recommendation": "Upskill procurement team on alternative sourcing and dynamic contract negotiation."}</response>
+                <response scenario_id="2">{"talent_gap": "AI Engineering", "recommendation": "Acqui-hire a boutique AI startup to rapidly onboard necessary technical talent."}</response>
+                <response scenario_id="3">{"action": "Restructuring", "impact": "10% headcount reduction in overlapping departments.", "recommendation": "Draft severance packages and retention bonuses for key personnel."}</response>
+                <response scenario_id="4">{"hiring_need": "Regional Leadership", "recommendation": "Initiate executive search for a European Managing Director with localized network."}</response>
+                <response scenario_id="5">{"leadership_gap": "Sustainability", "recommendation": "Appoint a Chief Sustainability Officer (CSO) to report directly to the CEO."}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="operations_specialist" name="Operations Specialist">
+            <description>Supply chain efficiency, process optimization, technology/ERP adoption.</description>
+            <mock_data default="Core operational processes are functioning at target utilization rates.">
+                <response scenario_id="1">{"bottleneck": "Tier-1 Suppliers", "action": "Activate secondary suppliers in LATAM to bypass current port congestion."}</response>
+                <response scenario_id="2">{"tech_debt": "Legacy Cloud Infrastructure", "action": "Migrate core databases to scalable cloud architecture to support new AI workloads."}</response>
+                <response scenario_id="3">{"integration": "ERP Systems", "action": "Migrate acquired company onto the parent instance of SAP within 90 days."}</response>
+                <response scenario_id="4">{"logistics": "Distribution", "action": "Establish a centralized fulfillment hub in Germany to serve the EU market."}</response>
+                <response scenario_id="5">{"facility_update": "Manufacturing Plants", "action": "Retrofit top 3 producing plants with IoT energy monitoring sensors."}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="risk_compliance" name="Risk &amp; Compliance Officer">
+            <description>Regulatory changes, legal risks, PR impact, data privacy.</description>
+            <mock_data default="No imminent regulatory or compliance risks detected.">
+                <response scenario_id="1">{"risk_level": "Low", "concern": "Quality control variations with new suppliers.", "mitigation": "Deploy on-site quality assurance auditors to LATAM facilities."}</response>
+                <response scenario_id="2">{"risk_level": "Medium", "concern": "Data privacy and AI bias.", "mitigation": "Establish an AI ethics committee before pushing products to production."}</response>
+                <response scenario_id="3">{"risk_level": "High", "concern": "Employment law violations and PR backlash from layoffs.", "mitigation": "Engage local labor counsel to ensure compliance with WARN Act/local equivalents."}</response>
+                <response scenario_id="4">{"risk_level": "High", "concern": "GDPR compliance and local employment laws.", "mitigation": "Audit all data collection methods to ensure strict EU GDPR adherence."}</response>
+                <response scenario_id="5">{"risk_level": "Critical", "concern": "Non-compliance fines up to $10M.", "mitigation": "Accelerate ESG reporting audits and certify current emissions baseline."}</response>
+            </mock_data>
+        </agent>
+    </agents>
+</system_config>

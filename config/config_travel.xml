@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system_config>
+    <prompts>
+        <router_prompt>
+<![CDATA[You are a Router. Select agents based on the user request.
+Available Agents: 
+{agent_list}
+
+Return ONLY a JSON list, e.g. ["market_scout", "revenue_strategist"]]]>
+        </router_prompt>
+        
+        <synthesis_prompt>
+<![CDATA[User Request: {user_input}
+Agent Data: {agent_data}
+
+Task: 
+1. Answer the user's request using the data.
+2. DETERMINE RISK: 
+   - If the recommendation suggests changing PRICES or publishing CONTENT, output "RISK: YES".
+   - If the recommendation is just analysis, reporting, or checking status, output "RISK: NO".]]>
+        </synthesis_prompt>
+    </prompts>
+
+    <scenarios>
+        <scenario id="1" default="true">
+            <keyword>november</keyword>
+            <keyword>bookings</keyword>
+        </scenario>
+        <scenario id="2">
+            <keyword>construction</keyword>
+            <keyword>noise</keyword>
+        </scenario>
+        <scenario id="3">
+            <keyword>concert</keyword>
+            <keyword>swift</keyword>
+            <keyword>demand</keyword>
+        </scenario>
+        <scenario id="4">
+            <keyword>families</keyword>
+            <keyword>family</keyword>
+            <keyword>crib</keyword>
+        </scenario>
+        <scenario id="5">
+            <keyword>price</keyword>
+            <keyword>competitor</keyword>
+        </scenario>
+    </scenarios>
+
+    <agents>
+        <agent id="market_scout" name="Market Scout">
+            <description>events, weather</description>
+            <mock_data default="No significant market alerts.">
+                <response scenario_id="1">{"event": "Tech Summit", "status": "CANCELLED", "impact": "negative demand"}</response>
+                <response scenario_id="2">{"alert": "City Construction", "location": "Main St", "duration": "2 weeks"}</response>
+                <response scenario_id="3">{"event": "Taylor Swift Eras Tour", "status": "NEW_ANNOUNCEMENT", "impact": "massive demand spike"}</response>
+                <response scenario_id="4">{"demographic": "Families", "flight_capacity": "+20%", "origin": "Domestic"}</response>
+                <response scenario_id="5">{"market_status": "stable", "competitor_activity": "aggressive discounting"}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="revenue_strategist" name="Revenue Strategist">
+            <description>pricing, rates</description>
+            <mock_data default="Rates are optimal.">
+                <response scenario_id="1">{"your_rate": 250, "comp_rate": 200, "variance": "Drop rate by $50", "recommendation": "Drop Rate"}</response>
+                <response scenario_id="2">{"occupancy": "dropping", "recommendation": "Offer 15% Discount"}</response>
+                <response scenario_id="3">{"your_rate": 200, "market_demand": "surge", "recommendation": "Raise Rate to $350"}</response>
+                <response scenario_id="4">{"opportunity": "Multi-room bookings", "recommendation": "Create Family Package"}</response>
+                <response scenario_id="5">{"alert": "Price War", "comp_move": "-$30 drop", "recommendation": "Match competitor rate or add value"}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="content_specialist" name="Content Specialist">
+            <description>photos, description</description>
+            <mock_data default="Content score is 100%.">
+                <response scenario_id="1">{"suggested": "Seasonality Mismatch change summer image to fireplace", "current_img": "Pool", "suggested": "Fireplace"}</response>
+                <response scenario_id="2">{"action": "Update Description: Construction Warning.", "text": "Entrance via side door due to roadwork"}</response>
+                <response scenario_id="3">{"action": "SEO Update: Concert Keywords", "keyword": "Near Stadium", "status": "Applied"}</response>
+                <response scenario_id="4">{"action": "Add Amenity: Cribs", "action": "Tag as Amenity to appear in filters"}</response>
+                <response scenario_id="5">{"value_prop": "Free Breakfast", "action": "Highlight in Hero Image"}</response>
+            </mock_data>
+        </agent>
+
+        <agent id="guest_experience" name="Guest Experience">
+            <description>reviews, sentiment</description>
+            <mock_data default="Sentiment is stable.">
+                <response scenario_id="1">{"sentiment": "Neutral", "recent_issues": "None"}</response>
+                <response scenario_id="2">{"sentiment": "Negative", "keywords": ["Noise", "Drilling", "Early Morning"]}</response>
+                <response scenario_id="3">{"sentiment": "Positive", "keywords": ["Excited", "Concert"]}</response>
+                <response scenario_id="4">{"sentiment": "Positive", "keywords": ["Pool Safety", "Kids Club"]}</response>
+                <response scenario_id="5">{"sentiment": "Mixed", "keywords": ["Expensive", "Not worth it"]}</response>
+            </mock_data>
+        </agent>
+        
+        <agent id="facilities_manager" name="Facilities Manager">
+            <description>maintenance, housekeeping, physical inventory</description>
+            <mock_data default="All facilities operating normally.">
+                <response scenario_id="1">{"status": "low_occupancy", "action_recommended": "Schedule deep cleaning and preventative maintenance for empty wings."}</response>
+                <response scenario_id="2">{"alert": "External noise high", "action_recommended": "Place complimentary earplugs and apology notes in street-facing rooms."}</response>
+                <response scenario_id="3">{"status": "max_occupancy", "action_recommended": "Approve overtime for housekeeping to ensure rapid room turnover before the event."}</response>
+                <response scenario_id="4">{"inventory_check": "Cribs and rollaway beds", "in_use": 2, "available": 8, "status": "sufficient"}</response>
+                <response scenario_id="5">{"status": "standard", "opportunity": "Approve free late checkout requests to increase perceived guest value."}</response>
+            </mock_data>
+        </agent>
+    </agents>
+</system_config>
