@@ -109,23 +109,24 @@
     the config declares, so a new agent is a new XML block and a new domain is a new file.</p>
   </section>
 
-  <section>
+  <section id="gate">
     <h2>The human gate</h2>
     <p>Some recommendations are cheap to be wrong about. Reporting that guest sentiment is
     neutral costs nothing if it is mistaken. Dropping your room rate by $50 is different, and so
     is a recommendation to reduce headcount by ten percent. The synthesis step scores each
     answer against a rule from the config, and anything above the line stops for a person.</p>
 
-    <p>Building this surfaced a defect worth repeating, because it is easy to reproduce and it
-    defeats the entire purpose of an approval gate. In the original, approval routed back
-    through the broker, which re-ran synthesis. The answer the user received was therefore a
-    second generation, sometimes carrying a different risk verdict than the one they had just
-    been shown and approved. In one recorded run the human approved a proposal marked
-    <code>RISK: YES</code> and the system returned an answer marked <code>RISK: NO</code>.</p>
+    <p>Approval must return the approved text. It is tempting to route an approval back
+    through the synthesis step, and that quietly defeats the gate: what the user receives is
+    then a second generation, which can differ from what they authorised. Here the gate is
+    terminal and hands back the proposal verbatim, with a test asserting that it appears
+    unchanged in the final answer.</p>
 
-    <p>The gate is now terminal: it returns the approved text verbatim, and a test asserts that
-    the proposal appears unchanged in the final answer. If you build one of these, put that
-    assertion in early.</p>
+    <p>That is not hypothetical. It is how the first version of this project worked, and the
+    original notebook is still in the history if you want to see it: in
+    <a href="https://github.com/johnfisher-ai/fisher-agentic-network-langgraph/commit/30e9b14">the commit that added it</a>, one recorded run shows a
+    human approving a proposal marked <code>RISK: YES</code> and receiving an answer marked
+    <code>RISK: NO</code>.</p>
   </section>
 
   <section>
